@@ -1,13 +1,19 @@
-# ABAC-Authorization
+# ABACAuthorization
 
 This is an attribute based access controll authorization system for the Swift Vapor Framework with FluentPostgreSQL.
 
-## Setup
+## Prerequisites
+- Models conforming to:
+    - ABACUser
+    - ABACRole
+    - ABACUserData
+    - ABACAccessData
 
 
 ## Minimal Policies
 It is recommendet to create a minimal set of rules to read, create auth policies and read roles to not lock yourself out:
-```
+
+```swift
 struct AdminAuthorizationPolicyRestricted: Migration {
     typealias Database = PostgreSQLDatabase
     
