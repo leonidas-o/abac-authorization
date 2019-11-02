@@ -11,19 +11,19 @@ import Foundation
 extension AuthorizationPolicy {
     static func createRules(for roleName: String, allRulesPermitsAccess permits: Bool) -> [AuthorizationPolicy] {
         
-        let readAuthPolicyActionOnResource = "\(ABACMiddlewareTests.Constant.apiAction.read)auth-policies"
+        let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)auth-policies"
         let readAuthPolicy = AuthorizationPolicy(
             roleName: roleName,
             actionOnResource: readAuthPolicyActionOnResource,
             actionOnResourceValue: permits)
         
-        let createAuthPolicyActionOnResource = "\(ABACMiddlewareTests.Constant.apiAction.create)auth-policies"
+        let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)auth-policies"
         let writeAuthPolicy = AuthorizationPolicy(
             roleName: roleName,
             actionOnResource: createAuthPolicyActionOnResource,
             actionOnResourceValue: permits)
         
-        let readRoleActionOnResource = "\(ABACMiddlewareTests.Constant.apiAction.read)roles"
+        let readRoleActionOnResource = "\(ABACAPIAction.read)roles"
         let readRole = AuthorizationPolicy(
             roleName: roleName,
             actionOnResource: readRoleActionOnResource,

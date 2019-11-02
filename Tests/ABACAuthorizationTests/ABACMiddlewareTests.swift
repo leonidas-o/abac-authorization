@@ -18,7 +18,6 @@ final class ABACMiddlewareTests: XCTestCase {
         static let existingToken = "existing-token"
         static let missingToken = "missing-token"
         static let adminRoleName = "admin"
-        static let apiAction: APIAction = APIAction(read: "read", create: "create", update: "update", delete: "delete")
     }
     
     
@@ -30,7 +29,7 @@ final class ABACMiddlewareTests: XCTestCase {
         
         app = try! Application.testable()        
         let cache = ABACCacheStoreSpy(container: app)
-        sut = ABACMiddleware<AccessData>(cache: cache, apiEntry: Constant.apiEntry, apiAction: Constant.apiAction)
+        sut = ABACMiddleware<AccessData>(cache: cache, apiEntry: Constant.apiEntry)
         request = Request(using: app)
         responder = ResponderSpy(container: app)
     }
@@ -128,12 +127,6 @@ final class ABACMiddlewareTests: XCTestCase {
         var name: String
     }
     
-    struct APIAction: ABACAPIAction {
-        var read: String
-        var create: String
-        var update: String
-        var delete: String
-    }
     
     
     

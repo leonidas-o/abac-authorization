@@ -7,13 +7,11 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     private let inMemoryAuthorizationPolicy: InMemoryAuthorizationPolicy
     private let cache: ABACCacheStore
     private let apiEntry: String
-    private let apiAction: ABACAPIAction
     
-    public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiEntry: String, apiAction: ABACAPIAction) {
+    public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiEntry: String) {
         self.inMemoryAuthorizationPolicy = InMemoryAuthorizationPolicy.shared
         self.cache = cache
         self.apiEntry = apiEntry
-        self.apiAction = apiAction
     }
     
     
@@ -32,16 +30,16 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
         // api bulk requests, where .create and .update is performed
         // right now, user can update a AuthorizationPolicy with
         // only a 'create' policy over a bulk create route
-        let action: String
+        let action: ABACAPIAction
         switch request.http.method.string {
         case "GET":
-            action = apiAction.read
+            action = .read
         case "POST":
-            action = apiAction.create
+            action = .create
         case "PUT":
-            action = apiAction.update
+            action = .update
         case "DELETE":
-            action = apiAction.delete
+            action = .delete
         default:
             throw Abort(.forbidden)
         }
@@ -58,7 +56,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
             var pdpRequests: [PDPRequest] = []
             for role in accessToken.userData.roles {
                 let pdpRequest = PDPRequest(role: role.name,
-                                            action: action,
+                                            action: action.rawValue,
                                             onResource: resource)
                 pdpRequests.append(pdpRequest)
             }
