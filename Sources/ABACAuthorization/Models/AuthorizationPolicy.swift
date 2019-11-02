@@ -2,7 +2,7 @@ import Vapor
 import FluentPostgreSQL
 import Foundation
 
-protocol AuthPolicyDefinition {
+public protocol AuthPolicyDefinition {
     var id: UUID? { get set }
     var roleName: String { get set }
     var actionOnResourceKey: String { get set }
@@ -11,7 +11,7 @@ protocol AuthPolicyDefinition {
 
 
 
-final class AuthorizationPolicy: Codable {
+public final class AuthorizationPolicy: Codable {
     
     var id: UUID?
     var roleName: String

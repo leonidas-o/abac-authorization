@@ -14,7 +14,7 @@ protocol ConditionValuable {
 
 
 
-final class InMemoryAuthorizationPolicy {
+public final class InMemoryAuthorizationPolicy {
     
     static let shared = InMemoryAuthorizationPolicy()
     

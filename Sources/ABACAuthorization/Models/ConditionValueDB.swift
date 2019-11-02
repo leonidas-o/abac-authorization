@@ -2,7 +2,7 @@ import Vapor
 import FluentPostgreSQL
 import Foundation
 
-final class ConditionValueDB: Codable {
+public final class ConditionValueDB: Codable {
     
     enum Constant {
         static let defaultConditionKey = "default"
