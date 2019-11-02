@@ -2,7 +2,7 @@ import Vapor
 import Foundation
 
 
-final class ABACMiddleware<AD: ABACAccessData>: Middleware {
+public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     private let inMemoryAuthorizationPolicy: InMemoryAuthorizationPolicy
     private let cache: ABACCacheStore
