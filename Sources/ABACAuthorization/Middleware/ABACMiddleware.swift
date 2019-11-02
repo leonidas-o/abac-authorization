@@ -8,7 +8,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     private let cache: ABACCacheStore
     private let apiEntry: String
     
-    init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiEntry: String) {
+    public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiEntry: String) {
         self.inMemoryAuthorizationPolicy = InMemoryAuthorizationPolicy.shared
         self.cache = cache
         self.apiEntry = apiEntry
