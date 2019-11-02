@@ -38,7 +38,7 @@ public final class InMemoryAuthorizationPolicy {
 }
 
 extension InMemoryAuthorizationPolicy: ServiceType {
-    static func makeService(for container: Container) throws -> InMemoryAuthorizationPolicy {
+    public static func makeService(for container: Container) throws -> InMemoryAuthorizationPolicy {
         return InMemoryAuthorizationPolicy.shared
     }
 }

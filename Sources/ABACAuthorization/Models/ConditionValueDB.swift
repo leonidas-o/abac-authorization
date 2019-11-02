@@ -29,7 +29,7 @@ public final class ConditionValueDB: Codable {
     }
     
     
-    var id: UUID?
+    public var id: UUID?
     var key: String
     var type: ConditionValueType
     var operation: ConditionOperationType
@@ -69,7 +69,7 @@ extension ConditionValueDB {
 
 
 extension ConditionValueDB: Migration {
-    static func prepare(on connection: PostgreSQLConnection) -> Future<Void> {
+    public static func prepare(on connection: PostgreSQLConnection) -> Future<Void> {
         return Database.create(self, on: connection) { builder in
             try addProperties(to: builder)
             builder.reference(from: \.authorizationPolicyID, to: \AuthorizationPolicy.id)
@@ -80,7 +80,7 @@ extension ConditionValueDB: Migration {
 
 
 extension ConditionValueDB {
-    func didUpdate(on conn: PostgreSQLConnection) throws -> EventLoopFuture<ConditionValueDB> {
+    public func didUpdate(on conn: PostgreSQLConnection) throws -> EventLoopFuture<ConditionValueDB> {
         return self.authorizationPolicy.get(on: conn).flatMap{ authPolicy in
             return try authPolicy.conditionValues.query(on: conn).all().map{ conditionValues in
                 try InMemoryAuthorizationPolicy.shared.addToInMemoryCollection(authPolicy: authPolicy, conditionValues: conditionValues)
@@ -89,7 +89,7 @@ extension ConditionValueDB {
         }
     }
     
-    func didCreate(on conn: PostgreSQLConnection) throws -> EventLoopFuture<ConditionValueDB> {
+    public func didCreate(on conn: PostgreSQLConnection) throws -> EventLoopFuture<ConditionValueDB> {
         return self.authorizationPolicy.get(on: conn).flatMap{ authPolicy in
             return try authPolicy.conditionValues.query(on: conn).all().map{ conditionValues in
                 try InMemoryAuthorizationPolicy.shared.addToInMemoryCollection(authPolicy: authPolicy, conditionValues: conditionValues)
@@ -98,7 +98,7 @@ extension ConditionValueDB {
         }
     }
     
-    func didDelete(on conn: PostgreSQLConnection) throws -> EventLoopFuture<ConditionValueDB> {
+    public func didDelete(on conn: PostgreSQLConnection) throws -> EventLoopFuture<ConditionValueDB> {
         return self.authorizationPolicy.get(on: conn).map{ authPolicy in
             InMemoryAuthorizationPolicy.shared.removeFromInMemoryCollection(conditionValue: self, in: authPolicy)
             return self
