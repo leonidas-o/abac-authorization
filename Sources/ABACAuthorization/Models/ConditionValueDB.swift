@@ -4,22 +4,22 @@ import Foundation
 
 public final class ConditionValueDB: Codable {
     
-    enum Constant {
+    public enum Constant {
         static let defaultConditionKey = "default"
     }
     
-    enum ConditionValueType: String, Codable, PostgreSQLRawEnum {
+    public enum ConditionValueType: String, Codable, PostgreSQLRawEnum {
         case string
         case int
         case double
     }
     
-    enum ConditionLhsRhsType: String, Codable, PostgreSQLRawEnum {
+    public enum ConditionLhsRhsType: String, Codable, PostgreSQLRawEnum {
         case value
         case reference
     }
     
-    enum ConditionOperationType: String, Codable, PostgreSQLRawEnum {
+    public enum ConditionOperationType: String, Codable, PostgreSQLRawEnum {
         case equal = "=="
         case notEqual = "!="
         case greaterThan = ">"
@@ -30,13 +30,13 @@ public final class ConditionValueDB: Codable {
     
     
     public var id: UUID?
-    var key: String
-    var type: ConditionValueType
-    var operation: ConditionOperationType
-    var lhsType: ConditionLhsRhsType
-    var lhs: String
-    var rhsType: ConditionLhsRhsType
-    var rhs: String
+    public var key: String
+    public var type: ConditionValueType
+    public var operation: ConditionOperationType
+    public var lhsType: ConditionLhsRhsType
+    public var lhs: String
+    public var rhsType: ConditionLhsRhsType
+    public var rhs: String
     var authorizationPolicyID: AuthorizationPolicy.ID
     
     init(key: String = Constant.defaultConditionKey,
@@ -62,7 +62,7 @@ extension ConditionValueDB: Content {}
 extension ConditionValueDB: Parameter {}
 
 extension ConditionValueDB {
-    var authorizationPolicy: Parent<ConditionValueDB, AuthorizationPolicy> {
+    public var authorizationPolicy: Parent<ConditionValueDB, AuthorizationPolicy> {
         return parent(\.authorizationPolicyID)
     }
 }

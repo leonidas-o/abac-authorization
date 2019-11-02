@@ -19,7 +19,7 @@ public final class AuthorizationPolicy: Codable {
     public var actionOnResourceValue: Bool
     
     
-    init(roleName: String, actionOnResource: String, actionOnResourceValue: Bool) {
+    public init(roleName: String, actionOnResource: String, actionOnResourceValue: Bool) {
         self.roleName = roleName
         self.actionOnResourceKey = actionOnResource
         self.actionOnResourceValue = actionOnResourceValue
@@ -60,7 +60,7 @@ extension AuthorizationPolicy: Migration {
 }
 
 extension AuthorizationPolicy {
-    var conditionValues: Children<AuthorizationPolicy, ConditionValueDB> {
+    public var conditionValues: Children<AuthorizationPolicy, ConditionValueDB> {
         return children(\.authorizationPolicyID)
     }
 }
