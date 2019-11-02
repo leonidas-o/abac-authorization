@@ -5,7 +5,7 @@ import Foundation
 public final class ConditionValueDB: Codable {
     
     public enum Constant {
-        static let defaultConditionKey = "default"
+        public static let defaultConditionKey = "default"
     }
     
     public enum ConditionValueType: String, Codable, PostgreSQLRawEnum {

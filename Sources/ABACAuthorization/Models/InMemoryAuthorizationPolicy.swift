@@ -71,7 +71,7 @@ extension InMemoryAuthorizationPolicy {
 // MARK: - Helper Methods
 
 extension InMemoryAuthorizationPolicy {
-    func addToInMemoryCollection(authPolicy: AuthorizationPolicy, conditionValues: [ConditionValueDB]) throws {
+    public func addToInMemoryCollection(authPolicy: AuthorizationPolicy, conditionValues: [ConditionValueDB]) throws {
         if conditionValues.isEmpty {
             let authValues = try prepareInMemoryAuthorizationValues(authPolicy, conditionValue: nil)
             add(authPolicy: authPolicy, conditionKey: ConditionValueDB.Constant.defaultConditionKey, authValues: authValues)
