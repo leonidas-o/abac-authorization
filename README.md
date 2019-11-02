@@ -9,6 +9,9 @@ This is an attribute based access controll authorization system for the Swift Va
     - ABACUserData
     - ABACAccessData
 
+- Cache store conforming to:
+    - ABACCacheStore
+
 
 ## Minimal Policies
 It is recommendet to create a minimal set of rules to read, create auth policies and read roles to not lock yourself out:
