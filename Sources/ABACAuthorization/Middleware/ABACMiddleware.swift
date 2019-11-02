@@ -7,11 +7,13 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     private let inMemoryAuthorizationPolicy: InMemoryAuthorizationPolicy
     private let cache: ABACCacheStore
     private let apiEntry: String
+    private let apiAction: ABACAPIAction
     
-    public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiEntry: String) {
+    public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiEntry: String, apiAction: ABACAPIAction) {
         self.inMemoryAuthorizationPolicy = InMemoryAuthorizationPolicy.shared
         self.cache = cache
         self.apiEntry = apiEntry
+        self.apiAction = apiAction
     }
     
     
@@ -30,16 +32,16 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
         // api bulk requests, where .create and .update is performed
         // right now, user can update a AuthorizationPolicy with
         // only a 'create' policy over a bulk create route
-        let action: APIAction
+        let action: String
         switch request.http.method.string {
         case "GET":
-            action = .read
+            action = apiAction.read
         case "POST":
-            action = .create
+            action = apiAction.create
         case "PUT":
-            action = .update
+            action = apiAction.update
         case "DELETE":
-            action = .delete
+            action = apiAction.delete
         default:
             throw Abort(.forbidden)
         }
@@ -56,7 +58,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
             var pdpRequests: [PDPRequest] = []
             for role in accessToken.userData.roles {
                 let pdpRequest = PDPRequest(role: role.name,
-                                            action: action.rawValue,
+                                            action: action,
                                             onResource: resource)
                 pdpRequests.append(pdpRequest)
             }
@@ -211,7 +213,7 @@ extension ABACMiddleware {
         let action: String
         let onResource: String
     }
-    
+        
     enum Decision {
         /// Approved
         case permit

@@ -3,7 +3,7 @@
 This is an attribute based access controll authorization system for the Swift Vapor Framework with FluentPostgreSQL.
 
 ## Prerequisites
-- Models conforming to:
+- Vapor Models conforming to:
     - ABACUser
     - ABACRole
     - ABACUserData
@@ -11,6 +11,10 @@ This is an attribute based access controll authorization system for the Swift Va
 
 - Cache store conforming to:
     - ABACCacheStore
+
+- APIAction (struct) conforming to:
+    - ABACAPIAction
+
 
 
 ## Minimal Policies
