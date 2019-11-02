@@ -17,7 +17,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     // MARK: - Policy Enforcement Point (PEP)
     
-    func respond(to request: Request, chainingTo next: Responder) throws -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: Responder) throws -> EventLoopFuture<Response> {
         
         guard let accessTokenString = request.http.headers.bearerAuthorization?.token else {
             throw Abort(.unauthorized)
