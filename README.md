@@ -1,9 +1,10 @@
 # ABACAuthorization
 
-This is an attribute based access controll authorization system for the Swift Vapor Framework with FluentPostgreSQL.
+This is an attribute based access control authorization system for the Swift Vapor Framework with FluentPostgreSQL.
 
-## Prerequisites
+## Getting Started
 
+### Conform Models
 - Vapor Models conforming to:
     - ABACUser
     - ABACRole
@@ -17,9 +18,8 @@ This is an attribute based access controll authorization system for the Swift Va
     - ABACAPIAction
 
 
-
-## Minimal Policies
-It is recommendet to create a minimal set of rules to read, create auth policies and read roles to not lock yourself out:
+### Define minimal policy rule set
+It is recommended to create a minimal set of rules to read, create auth policies and read roles to not lock yourself out
 
 ```swift
 struct AdminAuthorizationPolicyRestricted: Migration {
@@ -64,6 +64,33 @@ struct AdminAuthorizationPolicyRestricted: Migration {
     }
 }
 ```
+
+In `configure.swift` add your AdminAuthorizationPolicy migration with the minimal set of rules
+```swift
+if (env != .testing) {
+    migrations.add(migration: AdminAuthorizationPolicyRestricted.self, database: .psql)
+}
+```
+
+### Register Service
+In `configure.swift`  register the InMemoryAuthorizationPolicy service
+```swift
+services.register(InMemoryAuthorizationPolicy.self)
+```
+
+### Load persisted rules
+In `boot.swift` load saved policies
+```swift
+// MARK: Authorization
+
+let rules = try AuthorizationPolicy.query(on: conn).all().wait()
+let inMemoryAuthorizationPolicy = try app.make(InMemoryAuthorizationPolicy.self)
+for rule in rules {
+    let conditionValues = try rule.conditionValues.query(on: conn).all().wait()
+    try inMemoryAuthorizationPolicy.addToInMemoryCollection(authPolicy: rule, conditionValues: conditionValues)
+}
+```
+
 
 ## License
 
