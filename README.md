@@ -4,7 +4,18 @@ This is an attribute based access control authorization system for the Swift Vap
 
 ## Getting Started
 
-### Conform Models
+### Setup dependencies
+In your `package.swift` add the abac-authorization package
+```swift
+    ...
+        .package(url: "...", from: "3.0.0")
+    ...
+    ],
+    targets: [    
+        .target(name: "App", dependencies: ["FluentPostgreSQL", "Vapor", "Authentication", "ABACAuthorization"])
+```
+
+### Setup and conform Models
 - Vapor Models conforming to:
     - ABACUser
     - ABACRole

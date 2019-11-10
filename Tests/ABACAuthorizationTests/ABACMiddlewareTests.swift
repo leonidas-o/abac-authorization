@@ -12,15 +12,30 @@ final class ABACMiddlewareTests: XCTestCase {
     var app: Application!
     var request: Request!
     var responder: Responder!
+    var apiResource: APIResource!
     
     enum Constant {
-        static let apiEntry = "api"
         static let existingToken = "existing-token"
         static let missingToken = "missing-token"
         static let adminRoleName = "admin"
     }
     
-    
+    public struct APIResource: ABACAPIResourceable {
+        public var apiEntry: String = "api"
+        public var all: [String] = Resource.allCases.map { $0.rawValue }
+
+        public enum Resource: String, CaseIterable {
+            case authenticate = "authenticate"
+            case refresh = "refresh"
+            case authorizationPolicy = "authorization-policies"
+            case activityTags = "activity-tags"
+            case users = "users"
+            case myUser = "my-user"
+            case roles = "roles"
+            case conditionValueDB = "condition-values"
+        }
+    }
+
     
     // MARK: - Test lifecycle
     
@@ -29,7 +44,8 @@ final class ABACMiddlewareTests: XCTestCase {
         
         app = try! Application.testable()        
         let cache = ABACCacheStoreSpy(container: app)
-        sut = ABACMiddleware<AccessData>(cache: cache, apiEntry: Constant.apiEntry)
+        apiResource = APIResource()
+        sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
         request = Request(using: app)
         responder = ResponderSpy(container: app)
     }
@@ -144,7 +160,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let bearer = BearerAuthorization(token: Constant.missingToken)
         request.http.headers.bearerAuthorization = bearer
         request.http.method = HTTPMethod.GET
-        let url = URL(string: "https://www.test.com/\(Constant.apiEntry)/auth-policies")
+        let url = URL(string: "https://www.test.com/\(apiResource.apiEntry)/authorization-policies")
         request.http.url = url!
         
         // When
@@ -177,7 +193,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let bearer = BearerAuthorization(token: Constant.existingToken)
         request.http.headers.bearerAuthorization = bearer
         request.http.method = HTTPMethod.GET
-        let url = URL(string: "https://www.foo.com/\(Constant.apiEntry)/any-undefined-resource")
+        let url = URL(string: "https://www.foo.com/\(apiResource.apiEntry)/any-undefined-resource")
         request.http.url = url!
         
         // When
@@ -209,7 +225,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let bearer = BearerAuthorization(token: Constant.existingToken)
         request.http.headers.bearerAuthorization = bearer
         request.http.method = HTTPMethod.GET
-        let url = URL(string: "https://www.foo.com/\(Constant.apiEntry)/auth-policies")
+        let url = URL(string: "https://www.foo.com/\(apiResource.apiEntry)/authorization-policies")
         request.http.url = url!
         
         // When
@@ -226,7 +242,7 @@ final class ABACMiddlewareTests: XCTestCase {
             let response = try sut.respond(to: request, chainingTo: responder).wait()
             XCTAssertEqual(response.http.status, HTTPStatus.ok)
         } catch {
-            // no throw expected
+            XCTAssertTrue(false, "Error thrown, unexpected response status")
         }
         inMemAuthPolicy.removeAllFromInMemoryCollection()
     }
@@ -235,7 +251,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let bearer = BearerAuthorization(token: Constant.existingToken)
         request.http.headers.bearerAuthorization = bearer
         request.http.method = HTTPMethod.GET
-        let url = URL(string: "https://www.foo.com/\(Constant.apiEntry)/auth-policies")
+        let url = URL(string: "https://www.foo.com/\(apiResource.apiEntry)/authorization-policies")
         request.http.url = url!
         
         // When
@@ -252,7 +268,9 @@ final class ABACMiddlewareTests: XCTestCase {
             let response = try sut.respond(to: request, chainingTo: responder).wait()
             XCTAssertEqual(response.http.status, HTTPStatus.forbidden)
         } catch {
-            // no throw expected
+            if let abortError = error as? AbortError {
+                XCTAssertEqual(abortError.status, HTTPStatus.forbidden)
+            }
         }
         inMemAuthPolicy.removeAllFromInMemoryCollection()
     }
@@ -264,7 +282,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let bearer = BearerAuthorization(token: Constant.existingToken)
         request.http.headers.bearerAuthorization = bearer
         request.http.method = HTTPMethod.GET
-        let url = URL(string: "https://www.foo.com/\(Constant.apiEntry)/auth-policies")
+        let url = URL(string: "https://www.foo.com/\(apiResource.apiEntry)/authorization-policies")
         request.http.url = url!
         let conditionValues = ConditionValueDB.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         
@@ -288,7 +306,7 @@ final class ABACMiddlewareTests: XCTestCase {
             let response = try sut.respond(to: request, chainingTo: responder).wait()
             XCTAssertEqual(response.http.status, HTTPStatus.ok)
         } catch {
-            // no throw expected
+            XCTAssertTrue(false, "Error thrown, unexpected response status")
         }
         inMemAuthPolicy.removeAllFromInMemoryCollection()
     }
@@ -297,7 +315,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let bearer = BearerAuthorization(token: Constant.existingToken)
         request.http.headers.bearerAuthorization = bearer
         request.http.method = HTTPMethod.GET
-        let url = URL(string: "https://www.foo.com/\(Constant.apiEntry)/auth-policies")
+        let url = URL(string: "https://www.foo.com/\(apiResource.apiEntry)/authorization-policies")
         request.http.url = url!
         let conditionValues = ConditionValueDB.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         
@@ -321,7 +339,9 @@ final class ABACMiddlewareTests: XCTestCase {
             let response = try sut.respond(to: request, chainingTo: responder).wait()
             XCTAssertEqual(response.http.status, HTTPStatus.forbidden)
         } catch {
-            // no throw expected
+            if let abortError = error as? AbortError {
+                XCTAssertEqual(abortError.status, HTTPStatus.forbidden)
+            }
         }
         inMemAuthPolicy.removeAllFromInMemoryCollection()
     }
@@ -340,7 +360,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let bearer = BearerAuthorization(token: Constant.existingToken)
         request.http.headers.bearerAuthorization = bearer
         request.http.method = HTTPMethod.GET
-        let url = URL(string: "https://www.foo.com/\(Constant.apiEntry)/auth-policies")
+        let url = URL(string: "https://www.foo.com/\(apiResource.apiEntry)/authorization-policies")
         request.http.url = url!
         let conditionValues = ConditionValueDB.createConditionValues(dummyRef: "roles.0.name", dummyVal: "coach")
         

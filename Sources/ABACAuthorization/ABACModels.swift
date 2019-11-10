@@ -17,4 +17,7 @@ public protocol ABACAccessData: Codable {
     var userData: UserDataType { get set }
 }
 
-
+public protocol ABACAPIResourceable {
+    var apiEntry: String { get }
+    var all: [String] { get }
+}

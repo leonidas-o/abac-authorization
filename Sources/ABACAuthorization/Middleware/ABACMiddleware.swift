@@ -6,12 +6,13 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     private let inMemoryAuthorizationPolicy: InMemoryAuthorizationPolicy
     private let cache: ABACCacheStore
-    private let apiEntry: String
+    private let apiResource: ABACAPIResourceable
     
-    public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiEntry: String) {
+    
+    public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiResource: ABACAPIResourceable) {
         self.inMemoryAuthorizationPolicy = InMemoryAuthorizationPolicy.shared
         self.cache = cache
-        self.apiEntry = apiEntry
+        self.apiResource = apiResource
     }
     
     
@@ -45,9 +46,10 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
         }
         
         // TODO: Examine: What if api versioning introduced or nested resources, etc.?
-        guard let resource = pathComponents.item(after: apiEntry) else {
-            throw Abort(.internalServerError)
-        }
+        //        guard let resource = pathComponents.item(after: apiResources.apiEntry) else {
+        //            throw Abort(.internalServerError)
+        //        }
+        let resource = try getRequestedResource(fromPathComponents: pathComponents)
         
         return accessToken.flatMap(to: Response.self){ accessToken -> EventLoopFuture<Response> in
             guard let accessToken = accessToken else {
@@ -76,6 +78,24 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
         
     }
     
+    
+    private func getRequestedResource(fromPathComponents pathComponents: [String]) throws -> String {
+        let resources = Set(pathComponents).intersection(Set(apiResource.all))
+        var resource: String = ""
+        if resources.count == 1 {
+            // default request or parent child relationship
+            guard let first = resources.first else {
+                throw Abort(.internalServerError)
+            }
+            resource = first
+        } else if resource.count > 1 {
+            // pivot table/ sibling relationship
+            resource = resources.sorted().joined(separator: "_")
+            // TODO: What if not sorted, fallback, rearrange resources?
+            
+        }
+        return resource
+    }
     
     
     
