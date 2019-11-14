@@ -88,7 +88,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
                 throw Abort(.internalServerError)
             }
             resource = first
-        } else if resource.count > 1 {
+        } else if resources.count > 1 {
             // pivot table/ sibling relationship
             resource = resources.sorted().joined(separator: "_")
             // TODO: What if not sorted, fallback, rearrange resources?
