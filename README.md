@@ -21,10 +21,8 @@ In your `package.swift` add the abac-authorization package
     - ABACRole
     - ABACUserData
     - ABACAccessData
-
 - Cache store conforming to:
     - ABACCacheStore
-
 - APIResource conforming to:
     - ABACAPIResourceable
 
@@ -142,8 +140,9 @@ for rule in rules {
 ### Demo Project
 Here you can find an quick and dirty example project for testing purposes, it should show how ABACAuthorization can be used. Not all routes/ handlers are fully implemented, sometimes you have the api functionality but not the frontend part:
 
+https://github.com/leonidas-o/abac-authorization-web
 
-> When creeating new policies, it should be done from the API point of view. That means e.g. if you want to show all users, it's a "read users" policy as you need to read the "user" table. If you want to add a role to a user, you need to have a "create update role_user" policy because it has a pivot table, adding a role means creating an entry in here.
+> When creating new policies, it should be done from the API point of view. That means e.g. if you want to show all users, it's a "read users" policy as you need to read the "user" table. If you want to add a role to a user, you need to have a "create update role_user" policy because it has a pivot table, adding a role means creating an entry in here.
 
 
 
