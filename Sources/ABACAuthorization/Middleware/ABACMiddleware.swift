@@ -80,11 +80,14 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     
     private func getRequestedResource(fromPathComponents pathComponents: [String]) throws -> String {
-        let lastResource = pathComponents.last { apiResource.all.contains($0) }
-        guard let resource = lastResource else {
-            throw Abort(.internalServerError)
+        var lastResource: String = ""
+        for path in pathComponents.reversed() {
+            if apiResource.all.contains(path) {
+                lastResource = path
+                break
+            }
         }
-        return resource
+        return lastResource
         
 //        let resources = Set(pathComponents).intersection(Set(apiResource.all))
 //
