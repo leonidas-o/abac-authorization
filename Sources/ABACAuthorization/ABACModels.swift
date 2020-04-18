@@ -19,5 +19,5 @@ public protocol ABACAccessData: Codable {
 
 public protocol ABACAPIResourceable {
     var apiEntry: String { get }
-    var all: [String] { get }
+    var protectedResources: [String] { get }
 }

@@ -82,7 +82,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     private func getRequestedResource(fromPathComponents pathComponents: [String]) throws -> String {
         var lastResource: String = ""
         for path in pathComponents.reversed() {
-            if apiResource.all.contains(path) {
+            if apiResource.protectedResources.contains(path) {
                 lastResource = path
                 break
             }

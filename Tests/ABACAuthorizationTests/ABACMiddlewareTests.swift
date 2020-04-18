@@ -22,7 +22,7 @@ final class ABACMiddlewareTests: XCTestCase {
     
     public struct APIResource: ABACAPIResourceable {
         public var apiEntry: String = "api"
-        public var all: [String] = Resource.allCases.map { $0.rawValue }
+        public var protectedResources: [String] = Resource.allCases.map { $0.rawValue }
 
         public enum Resource: String, CaseIterable {
             case authenticate = "authenticate"
