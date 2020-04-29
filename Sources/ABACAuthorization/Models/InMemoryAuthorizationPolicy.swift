@@ -85,7 +85,7 @@ extension InMemoryAuthorizationPolicy {
     
     private func add(authPolicy: AuthorizationPolicy, conditionKey: String, authValues: AuthorizationValues) {
         if self.authPolicyCollection[authPolicy.roleName] == nil {
-            self.authPolicyCollection[authPolicy.roleName] =  [authPolicy.actionOnResourceKey:[conditionKey:authValues]]
+            self.authPolicyCollection[authPolicy.roleName] = [authPolicy.actionOnResourceKey:[conditionKey:authValues]]
         }
         if self.authPolicyCollection[authPolicy.roleName]![authPolicy.actionOnResourceKey] == nil {
             self.authPolicyCollection[authPolicy.roleName]![authPolicy.actionOnResourceKey] = [conditionKey:authValues]
