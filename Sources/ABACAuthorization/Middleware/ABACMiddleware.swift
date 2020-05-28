@@ -39,6 +39,8 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
             action = .create
         case "PUT":
             action = .update
+        case "PATCH":
+            action = .update
         case "DELETE":
             action = .delete
         default:
