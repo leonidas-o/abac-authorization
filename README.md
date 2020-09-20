@@ -12,7 +12,13 @@ In your `package.swift` add the abac-authorization package
     ...
     ],
     targets: [    
-        .target(name: "App", dependencies: ["FluentPostgreSQL", "Vapor", "Authentication", "ABACAuthorization"])
+        .target(name: "App", dependencies: [
+            .product(name: "Fluent", package: "fluent"),
+            .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"),
+            .product(name: "Vapor", package: "vapor"),
+            .product(name: "ABACAuthorization", package: "abac-authorization"),
+        ])
+    ...
 ```
 
 ### Setup and conform Models
@@ -31,7 +37,6 @@ In your `package.swift` add the abac-authorization package
 #### Admin user
 ```swift
 struct AdminUser: Migration {
-    typealias Database = SQLiteDatabase
     
     enum Constant {
         static let firstName = "Admin"
@@ -40,9 +45,9 @@ struct AdminUser: Migration {
         static let email = "webmaster@foo.com"
     }
     
-    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
         let randomPassword = (try? CryptoRandom().generateData(count: 16).base64EncodedString())!
-        print("\nPASSWORD: \(randomPassword)") // TODO: use logger
+        print("\nPASSWORD: \(randomPassword)")
         let password = try? BCrypt.hash(randomPassword)
         guard let hashedPassword = password else {
             fatalError("Failed to create admin user")
@@ -51,11 +56,13 @@ struct AdminUser: Migration {
             name: Constant.lastName,
             email: Constant.email,
             passwordHash: hashedPassword)
-        return user.save(on: connection).transform(to: ())
+        user.save(on: database)
     }
     
-    static func revert(on connection: SQLiteConnection) -> Future<Void> {
-        return .done(on: connection)
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        User.query(on: database)
+        .filter(\.$email == Constant.email)
+        .delete()
     }
 }
 ```
@@ -65,12 +72,10 @@ It is recommended to create a minimal set of rules to read, create auth policies
 
 ```swift
 struct AdminAuthorizationPolicyRestricted: Migration {
-    typealias Database = PostgreSQLDatabase
     
-    static func prepare(on conn: PostgreSQLConnection) -> EventLoopFuture<Void> {
+    func prepare(on conn: Database) -> EventLoopFuture<Void> {
         
-        return Role.query(on: conn).first().unwrap(or: Abort(.internalServerError)).flatMap { role in
-            
+        Role.query(on: conn).first().unwrap(or: Abort(.internalServerError)).flatMap { role in
             
             let readAuthPolicyActionOnResource = "\(APIAction.read)\(APIResource.authorizationPolicyResource.rawValue)"
             let readAuthPolicy = AuthorizationPolicy(
@@ -96,29 +101,38 @@ struct AdminAuthorizationPolicyRestricted: Migration {
                 writeAuthPolicy.save(on: conn),
                 readRole.save(on: conn)
             ]
-            return policySaveResults.flatten(on: conn).transform(to: ())
+            policySaveResults.flatten(on: conn).transform(to: ())
         }
         
     }
     
-    static func revert(on conn: PostgreSQLConnection) -> EventLoopFuture<Void> {
-        return .done(on: conn)
+    func revert(on conn: Database) -> EventLoopFuture<Void> {
+        AuthorizationPolicy.query(on: database)
+        .filter(\.$roleName == role.name)
+        .filter(\(.$actionOnResource) == "\(APIAction.read)\(APIResource.authorizationPolicyResource.rawValue)")
+        .delete()
+        
+        AuthorizationPolicy.query(on: database)
+        .filter(\.$roleName == role.name)
+        .filter(\(.$actionOnResource) == "\(APIAction.create)\(APIResource.authorizationPolicyResource.rawValue)")
+        .delete()
+        
+        AuthorizationPolicy.query(on: database)
+        .filter(\.$roleName == role.name)
+        .filter(\(.$actionOnResource) == "\(APIAction.read)\(APIResource.rolesResource.rawValue)")
+        .delete()
     }
 }
 ```
 
 In `configure.swift` add your AdminAuthorizationPolicy migration with the minimal set of rules
 ```swift
-if (env != .testing) {
-    migrations.add(migration: AdminAuthorizationPolicyRestricted.self, database: .psql)
+// If it is only for testing environment otherwise just use the body
+if (app.environment != .testing) {
+    app.migrations.use(AdminAuthorizationPolicyRestricted(), on: .psql)
 }
 ```
 
-### Register Service
-In `configure.swift`  register the InMemoryAuthorizationPolicy service
-```swift
-services.register(InMemoryAuthorizationPolicy.self)
-```
 
 ### Load persisted rules
 In `boot.swift` load saved policies
@@ -128,13 +142,16 @@ let conn = try app.newConnection(to: .psql).wait()
 // MARK: Authorization
 
 let rules = try AuthorizationPolicy.query(on: conn).all().wait()
-let inMemoryAuthorizationPolicy = try app.make(InMemoryAuthorizationPolicy.self)
+let authorizationPolicyService = try app.authorizationPolicyService
 for rule in rules {
     let conditionValues = try rule.conditionValues.query(on: conn).all().wait()
-    try inMemoryAuthorizationPolicy.addToInMemoryCollection(authPolicy: rule, conditionValues: conditionValues)
+    try authorizationPolicyService.addToInMemoryCollection(authPolicy: rule, conditionValues: conditionValues)
 }
 ```
 
+
+### High availability usage
+tbd
 
 
 ### Demo Project

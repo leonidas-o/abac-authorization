@@ -6,7 +6,7 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     // MARK: - Subject under test
     
-    var sut: InMemoryAuthorizationPolicy!
+    var sut: AuthorizationPolicyService!
 
     enum Constant {
         static let existingToken = "existing-token"
@@ -18,7 +18,7 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        sut = InMemoryAuthorizationPolicy.shared
+        sut = AuthorizationPolicyService.shared
     }
 
     override func tearDown() {
@@ -169,11 +169,11 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     
 
-    static var allTests = [
-        ("testAddRuleWithoutConditionValues", testAddRuleWithoutConditionValues),
-        ("testAddRuleWithOneConditionValue" ,testAddRuleWithOneConditionValue),
-        ("testRemoveRule", testRemoveRule),
-        ("testRemoveConditionValueInRule", testRemoveConditionValueInRule),
-        ("testRemoveAllRules", testRemoveAllRules)
-    ]
+//    static var allTests = [
+//        ("testAddRuleWithoutConditionValues", testAddRuleWithoutConditionValues),
+//        ("testAddRuleWithOneConditionValue" ,testAddRuleWithOneConditionValue),
+//        ("testRemoveRule", testRemoveRule),
+//        ("testRemoveConditionValueInRule", testRemoveConditionValueInRule),
+//        ("testRemoveAllRules", testRemoveAllRules)
+//    ]
 }

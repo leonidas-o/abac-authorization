@@ -4,13 +4,13 @@ import Foundation
 
 public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
-    private let inMemoryAuthorizationPolicy: InMemoryAuthorizationPolicy
+    private let authorizationPolicyService: AuthorizationPolicyService
     private let cache: ABACCacheStore
     private let apiResource: ABACAPIResourceable
     
     
     public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiResource: ABACAPIResourceable) {
-        self.inMemoryAuthorizationPolicy = InMemoryAuthorizationPolicy.shared
+        self.authorizationPolicyService = AuthorizationPolicyService.shared
         self.cache = cache
         self.apiResource = apiResource
     }
@@ -18,21 +18,25 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     // MARK: - Policy Enforcement Point (PEP)
     
-    public func respond(to request: Request, chainingTo next: Responder) throws -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         
-        guard let accessTokenString = request.http.headers.bearerAuthorization?.token else {
-            throw Abort(.unauthorized)
+        guard let accessTokenString = request.headers.bearerAuthorization?.token else {
+            return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
         //let accessToken = cache.get(key: accessTokenString, as: AD.self).unwrap(or: Abort(.unauthorized))
         let accessToken = cache.get(key: accessTokenString, as: AD.self)
-        let pathComponents = request.http.url.pathComponents
+        
+        // Vapor 3
+//        let pathComponents = request.http.url.pathComponents
+        // Vapor 4 workaround
+        let pathComponents = request.url.path.components(separatedBy: "/")
         
         // TODO: refactor actions constant to an array needed for
         // api bulk requests, where .create and .update is performed
         // right now, user can update a AuthorizationPolicy with
         // only a 'create' policy over a bulk create route
         let action: ABACAPIAction
-        switch request.http.method.string {
+        switch request.method.string {
         case "GET":
             action = .read
         case "POST":
@@ -44,18 +48,18 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
         case "DELETE":
             action = .delete
         default:
-            throw Abort(.forbidden)
+            return request.eventLoop.makeFailedFuture(Abort(.forbidden))
         }
         
         // TODO: Examine: What if api versioning introduced or nested resources, etc.?
         //        guard let resource = pathComponents.item(after: apiResources.apiEntry) else {
         //            throw Abort(.internalServerError)
         //        }
-        let resource = try getRequestedResource(fromPathComponents: pathComponents)
+        let resource = getRequestedResource(fromPathComponents: pathComponents)
         
-        return accessToken.flatMap(to: Response.self){ accessToken -> EventLoopFuture<Response> in
+        return accessToken.flatMap { accessToken -> EventLoopFuture<Response> in
             guard let accessToken = accessToken else {
-                throw Abort(.unauthorized)
+                return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
             }
             var pdpRequests: [PDPRequest] = []
             for role in accessToken.userData.roles {
@@ -65,31 +69,36 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
                 pdpRequests.append(pdpRequest)
             }
             
-            let decision = try self.checkPDPRequests(pdpRequests, on: accessToken.userData)
+            var decision = Decision.notapplicable
+            do {
+                decision = try self.checkPDPRequests(pdpRequests, on: accessToken.userData)
+            } catch {
+                return request.eventLoop.makeFailedFuture(error)
+            }
             switch decision {
             case .permit:
-                return try next.respond(to: request)
+                return next.respond(to: request)
             case .deny:
-                throw Abort(.forbidden)
+                return request.eventLoop.makeFailedFuture(Abort(.forbidden))
             case .indeterminate:
-                throw Abort(.forbidden)
+                return request.eventLoop.makeFailedFuture(Abort(.forbidden))
             case .notapplicable:
-                throw Abort(.forbidden)
+                return request.eventLoop.makeFailedFuture(Abort(.forbidden))
             }
         }
         
     }
     
     
-    private func getRequestedResource(fromPathComponents pathComponents: [String]) throws -> String {
-        var lastResource: String = ""
+    private func getRequestedResource(fromPathComponents pathComponents: [String]) -> String {
+        var lastProtectedResource: String = ""
         for path in pathComponents.reversed() {
             if apiResource.protectedResources.contains(path) {
-                lastResource = path
+                lastProtectedResource = path
                 break
             }
         }
-        return lastResource
+        return lastProtectedResource
         
 //        let resources = Set(pathComponents).intersection(Set(apiResource.all))
 //
@@ -106,6 +115,8 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
 //        }
 //        return resource
     }
+    
+    
     
     
     
@@ -131,7 +142,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
         var decision = Decision.notapplicable
         for pdpRequest in pdpRequests {
             
-            guard let policyCollection = inMemoryAuthorizationPolicy.authPolicyCollection[pdpRequest.role]?[pdpRequest.action+pdpRequest.onResource] else {
+            guard let policyCollection = authorizationPolicyService.authPolicyCollection[pdpRequest.role]?[pdpRequest.action+pdpRequest.onResource] else {
                 decision = .notapplicable
                 continue
             }
@@ -174,7 +185,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     private func evaluateConditionOperation<T: Comparable>(_ t: T.Type, conditionValue: ConditionValuable, userDataMirror: Mirror) throws -> Bool {
         switch (conditionValue.lhsType, conditionValue.rhsType) {
         case (.reference, .reference):
-            guard let conditionValue = conditionValue as? InMemoryAuthorizationPolicy.ConditionValue<String, String, T> else {
+            guard let conditionValue = conditionValue as? AuthorizationPolicyService.ConditionValue<String, String, T> else {
                 throw Abort(.internalServerError)
             }
             
@@ -184,21 +195,21 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
             let rhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: rhsComponents)
             return conditionValue.operation(lhs, rhs)
         case (.reference, .value):
-            guard let conditionValue = conditionValue as? InMemoryAuthorizationPolicy.ConditionValue<String, T, T> else {
+            guard let conditionValue = conditionValue as? AuthorizationPolicyService.ConditionValue<String, T, T> else {
                 throw Abort(.internalServerError)
             }
             let lhsComponents: [MirrorPath] = conditionValue.lhs.components(separatedBy: ".").toMirrorPath()
             let lhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: lhsComponents)
             return conditionValue.operation(lhs, conditionValue.rhs)
         case (.value, .reference):
-            guard let conditionValue = conditionValue as? InMemoryAuthorizationPolicy.ConditionValue<T, String, T> else {
+            guard let conditionValue = conditionValue as? AuthorizationPolicyService.ConditionValue<T, String, T> else {
                 throw Abort(.internalServerError)
             }
             let rhsComponents: [MirrorPath] = conditionValue.rhs.components(separatedBy: ".").toMirrorPath()
             let rhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: rhsComponents)
             return conditionValue.operation(conditionValue.lhs, rhs)
         case (.value, .value):
-            guard let conditionValue = conditionValue as? InMemoryAuthorizationPolicy.ConditionValue<T, T, T> else {
+            guard let conditionValue = conditionValue as? AuthorizationPolicyService.ConditionValue<T, T, T> else {
                 throw Abort(.internalServerError)
             }
             return conditionValue.operation(conditionValue.lhs, conditionValue.rhs)

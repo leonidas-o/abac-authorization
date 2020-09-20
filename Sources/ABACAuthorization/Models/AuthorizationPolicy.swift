@@ -1,5 +1,6 @@
 import Vapor
-import FluentPostgreSQL
+import Fluent
+import FluentPostgresDriver
 import Foundation
 
 public protocol AuthPolicyDefinition {
@@ -11,13 +12,25 @@ public protocol AuthPolicyDefinition {
 
 
 
-public final class AuthorizationPolicy: Codable {
+public final class AuthorizationPolicy: Codable, Model {
     
+    public static let schema = "authorization_policy"
+    
+    @ID(key: .id)
     public var id: UUID?
+    @Field(key: "role_name")
     public var roleName: String
+    @Field(key: "action_on_resource_key")
     public var actionOnResourceKey: String
+    @Field(key: "action_on_resource_value")
     public var actionOnResourceValue: Bool
     
+    @Children(for: \.$authorizationPolicy)
+    public var conditionValues: [ConditionValueDB]
+    
+    
+    
+    public init() {}
     
     public init(roleName: String, actionOnResource: String, actionOnResourceValue: Bool) {
         self.roleName = roleName
@@ -26,41 +39,59 @@ public final class AuthorizationPolicy: Codable {
     }
 }
 
+
+
+// MARK: - Conformances
 extension AuthorizationPolicy: AuthPolicyDefinition {}
-extension AuthorizationPolicy: PostgreSQLUUIDModel {}
+
 extension AuthorizationPolicy: Content {}
-extension AuthorizationPolicy: Parameter {}
 
-extension AuthorizationPolicy {
-    public func didUpdate(on conn: PostgreSQLConnection) throws -> EventLoopFuture<AuthorizationPolicy> {
-        return try self.conditionValues.query(on: conn).all().map{ conditionValuesDB in
-            try InMemoryAuthorizationPolicy.shared.addToInMemoryCollection(authPolicy: self, conditionValues: conditionValuesDB)
-            return self
-        }
+
+
+// MARK: - Migration
+
+public struct AuthorizationPolicyMigration: Migration {
+    public func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema("authorization_policy")
+        .unique(on: "role_name", "action_on_resource_key")
+        .create()
     }
     
-    public func didCreate(on conn: PostgreSQLConnection) throws -> EventLoopFuture<AuthorizationPolicy> {
-        try InMemoryAuthorizationPolicy.shared.addToInMemoryCollection(authPolicy: self, conditionValues: [])
-        return Future.map(on: conn) { self }
-    }
-    
-    public func didDelete(on conn: PostgreSQLConnection) throws -> EventLoopFuture<AuthorizationPolicy> {
-        InMemoryAuthorizationPolicy.shared.removeFromInMemoryCollection(authPolicy: self)
-        return Future.map(on: conn) { self }
+    public func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema("authorization_policy")
+        .delete()
     }
 }
 
-extension AuthorizationPolicy: Migration {
-    public static func prepare(on connection: PostgreSQLConnection) -> Future<Void> {
-        return Database.create(self, on: connection) { builder in
-            try addProperties(to: builder)
-            builder.unique(on: \.roleName, \.actionOnResourceKey)
+
+
+// MARK: - ModelMiddleware
+
+public struct AuthorizationPolicyMiddleware: ModelMiddleware {
+    public func update(model: AuthorizationPolicy, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+        // before operation
+        return next.update(model, on: db).map {
+            // after operation
+            _ = model.$conditionValues.query(on: db).all().flatMapThrowing { conditionValuesDB in
+                try AuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: model, conditionValues: conditionValuesDB)
+            }
         }
     }
-}
-
-extension AuthorizationPolicy {
-    public var conditionValues: Children<AuthorizationPolicy, ConditionValueDB> {
-        return children(\.authorizationPolicyID)
+    
+    public func create(model: AuthorizationPolicy, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+        // before operation
+        return next.create(model, on: db).flatMapThrowing {
+            // after operation
+            try AuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: model, conditionValues: [])
+        }
+    }
+    
+    public func delete(model: AuthorizationPolicy, force: Bool, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+        // before operation
+        return next.delete(model, force: force, on: db).map {
+            // after operation
+            AuthorizationPolicyService.shared.removeFromInMemoryCollection(authPolicy: model)
+        }
+        
     }
 }

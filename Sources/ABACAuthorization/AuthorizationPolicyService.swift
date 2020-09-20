@@ -14,9 +14,9 @@ protocol ConditionValuable {
 
 
 
-public final class InMemoryAuthorizationPolicy {
+public final class AuthorizationPolicyService {
     
-    static let shared = InMemoryAuthorizationPolicy()
+    static let shared = AuthorizationPolicyService()
     
     private init() {}
     
@@ -37,9 +37,10 @@ public final class InMemoryAuthorizationPolicy {
     }
 }
 
-extension InMemoryAuthorizationPolicy: ServiceType {
-    public static func makeService(for container: Container) throws -> InMemoryAuthorizationPolicy {
-        return InMemoryAuthorizationPolicy.shared
+
+extension Application {
+    var authorizationPolicyService: AuthorizationPolicyService {
+        return AuthorizationPolicyService.shared
     }
 }
 
@@ -48,7 +49,7 @@ extension InMemoryAuthorizationPolicy: ServiceType {
 
 // MARK: - Structure
 
-extension InMemoryAuthorizationPolicy {
+extension AuthorizationPolicyService {
     struct AuthorizationValues: AuthorizationValuable {
         var actionOnResourceValue: Bool
         var conditionValue: ConditionValuable?
@@ -70,7 +71,7 @@ extension InMemoryAuthorizationPolicy {
 
 // MARK: - Helper Methods
 
-extension InMemoryAuthorizationPolicy {
+extension AuthorizationPolicyService {
     public func addToInMemoryCollection(authPolicy: AuthorizationPolicy, conditionValues: [ConditionValueDB]) throws {
         if conditionValues.isEmpty {
             let authValues = try prepareInMemoryAuthorizationValues(authPolicy, conditionValue: nil)
@@ -96,7 +97,7 @@ extension InMemoryAuthorizationPolicy {
 
 
 
-extension InMemoryAuthorizationPolicy {
+extension AuthorizationPolicyService {
     func removeFromInMemoryCollection(authPolicy: AuthorizationPolicy) {
         self.authPolicyCollection[authPolicy.roleName]?.removeValue(forKey: authPolicy.actionOnResourceKey)
     }
@@ -112,7 +113,7 @@ extension InMemoryAuthorizationPolicy {
 
 
 
-extension InMemoryAuthorizationPolicy {
+extension AuthorizationPolicyService {
     private func prepareInMemoryAuthorizationValues(_ authPolicy: AuthorizationPolicy, conditionValue: ConditionValueDB?) throws -> AuthorizationValues {
         
         guard let conditionValue = conditionValue else {

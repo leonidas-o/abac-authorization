@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Leonid Orsulic on 26.10.19.
-//
-
 @testable import ABACAuthorization
 import Foundation
 
@@ -35,8 +28,8 @@ extension AuthorizationPolicy {
 
 extension ConditionValueDB {
     static func createConditionValues(dummyRef: String, dummyVal: String) -> [ConditionValueDB] {
-        let dummyID = UUID()
-        let conditionValue = ConditionValueDB(type: .string, operation: .equal, lhsType: .reference, lhs: dummyRef, rhsType: .value, rhs: dummyVal, authorizationPolicyID: dummyID)
+        let dummyId = UUID()
+        let conditionValue = ConditionValueDB(type: .string, operation: .equal, lhsType: .reference, lhs: dummyRef, rhsType: .value, rhs: dummyVal, authorizationPolicyId: dummyId)
         return [conditionValue]
     
     }
