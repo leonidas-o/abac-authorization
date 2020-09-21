@@ -33,25 +33,16 @@ public final class ConditionValueDB: Codable, Model {
     public static let schema = "condition_value_db"
     
     
-    @ID(key: .id)
-    public var id: UUID?
-    @Field(key: "key")
-    public var key: String
-    @Field(key: "type")
-    public var type: ConditionValueType
-    @Field(key: "operation")
-    public var operation: ConditionOperationType
-    @Field(key: "lhs_type")
-    public var lhsType: ConditionLhsRhsType
-    @Field(key: "lhs")
-    public var lhs: String
-    @Field(key: "rhs_type")
-    public var rhsType: ConditionLhsRhsType
-    @Field(key: "rhs")
-    public var rhs: String
+    @ID(key: .id) public var id: UUID?
+    @Field(key: "key") public var key: String
+    @Field(key: "type") public var type: ConditionValueType
+    @Field(key: "operation") public var operation: ConditionOperationType
+    @Field(key: "lhs_type") public var lhsType: ConditionLhsRhsType
+    @Field(key: "lhs") public var lhs: String
+    @Field(key: "rhs_type") public var rhsType: ConditionLhsRhsType
+    @Field(key: "rhs") public var rhs: String
     
-    @Parent(key: "authorization_policy_id")
-    public var authorizationPolicy: AuthorizationPolicy
+    @Parent(key: "authorization_policy_id") public var authorizationPolicy: AuthorizationPolicy
     
     
     public init() {}
@@ -89,6 +80,14 @@ extension ConditionValueDB: Content {}
 public struct ConditionValueDBMigration: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema("condition_value_db")
+        .id()
+        .field("key", .string, .required)
+        .field("type", .string, .required)
+        .field("operation", .string, .required)
+        .field("lhs_type", .string, .required)
+        .field("lhs", .string, .required)
+        .field("rhs_type", .string, .required)
+        .field("rhs", .string, .required)
         .field("authorization_policy_id", .uuid, .required, .references("authorization_policy", "id"))
         .unique(on: "key", "authorization_policy_id")
         .create()

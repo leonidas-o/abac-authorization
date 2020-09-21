@@ -16,18 +16,12 @@ public final class AuthorizationPolicy: Codable, Model {
     
     public static let schema = "authorization_policy"
     
-    @ID(key: .id)
-    public var id: UUID?
-    @Field(key: "role_name")
-    public var roleName: String
-    @Field(key: "action_on_resource_key")
-    public var actionOnResourceKey: String
-    @Field(key: "action_on_resource_value")
-    public var actionOnResourceValue: Bool
+    @ID(key: .id) public var id: UUID?
+    @Field(key: "role_name") public var roleName: String
+    @Field(key: "action_on_resource_key") public var actionOnResourceKey: String
+    @Field(key: "action_on_resource_value") public var actionOnResourceValue: Bool
     
-    @Children(for: \.$authorizationPolicy)
-    public var conditionValues: [ConditionValueDB]
-    
+    @Children(for: \.$authorizationPolicy) public var conditionValues: [ConditionValueDB]
     
     
     public init() {}
@@ -53,6 +47,10 @@ extension AuthorizationPolicy: Content {}
 public struct AuthorizationPolicyMigration: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema("authorization_policy")
+        .id()
+        .field("role_name", .string, .required)
+        .field("action_on_resource_key", .string, .required)
+        .field("action_on_resource_value", .bool, .required)
         .unique(on: "role_name", "action_on_resource_key")
         .create()
     }
