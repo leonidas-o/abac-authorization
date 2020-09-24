@@ -3,7 +3,8 @@ import Fluent
 import FluentPostgresDriver
 import Foundation
 
-public protocol AuthPolicyDefinition {
+
+public protocol ABACAuthorizationPolicyDefinition {
     var id: UUID? { get set }
     var roleName: String { get set }
     var actionOnResourceKey: String { get set }
@@ -12,16 +13,16 @@ public protocol AuthPolicyDefinition {
 
 
 
-public final class AuthorizationPolicy: Codable, Model {
+public final class ABACAuthorizationPolicyModel: Model {
     
-    public static let schema = "authorization_policy"
+    public static let schema = "abac_authorization_policy"
     
     @ID(key: .id) public var id: UUID?
     @Field(key: "role_name") public var roleName: String
     @Field(key: "action_on_resource_key") public var actionOnResourceKey: String
     @Field(key: "action_on_resource_value") public var actionOnResourceValue: Bool
     
-    @Children(for: \.$authorizationPolicy) public var conditionValues: [ConditionValueDB]
+    @Children(for: \.$authorizationPolicy) public var conditionValues: [ABACConditionModel]
     
     
     public init() {}
@@ -36,9 +37,9 @@ public final class AuthorizationPolicy: Codable, Model {
 
 
 // MARK: - Conformances
-extension AuthorizationPolicy: AuthPolicyDefinition {}
+extension ABACAuthorizationPolicyModel: ABACAuthorizationPolicyDefinition {}
 
-extension AuthorizationPolicy: Content {}
+extension ABACAuthorizationPolicyModel: Content {}
 
 
 
@@ -46,7 +47,7 @@ extension AuthorizationPolicy: Content {}
 
 public struct AuthorizationPolicyMigration: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("authorization_policy")
+        database.schema("abac_authorization_policy")
         .id()
         .field("role_name", .string, .required)
         .field("action_on_resource_key", .string, .required)
@@ -56,7 +57,7 @@ public struct AuthorizationPolicyMigration: Migration {
     }
     
     public func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("authorization_policy")
+        database.schema("abac_authorization_policy")
         .delete()
     }
 }
@@ -66,29 +67,29 @@ public struct AuthorizationPolicyMigration: Migration {
 // MARK: - ModelMiddleware
 
 public struct AuthorizationPolicyMiddleware: ModelMiddleware {
-    public func update(model: AuthorizationPolicy, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+    public func update(model: ABACAuthorizationPolicyModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
         // before operation
         return next.update(model, on: db).map {
             // after operation
             _ = model.$conditionValues.query(on: db).all().flatMapThrowing { conditionValuesDB in
-                try AuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: model, conditionValues: conditionValuesDB)
+                try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: model, conditionValues: conditionValuesDB)
             }
         }
     }
     
-    public func create(model: AuthorizationPolicy, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+    public func create(model: ABACAuthorizationPolicyModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
         // before operation
         return next.create(model, on: db).flatMapThrowing {
             // after operation
-            try AuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: model, conditionValues: [])
+            try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: model, conditionValues: [])
         }
     }
     
-    public func delete(model: AuthorizationPolicy, force: Bool, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+    public func delete(model: ABACAuthorizationPolicyModel, force: Bool, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
         // before operation
         return next.delete(model, force: force, on: db).map {
             // after operation
-            AuthorizationPolicyService.shared.removeFromInMemoryCollection(authPolicy: model)
+            ABACAuthorizationPolicyService.shared.removeFromInMemoryCollection(authPolicy: model)
         }
         
     }

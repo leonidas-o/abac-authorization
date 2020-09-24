@@ -1,23 +1,23 @@
 @testable import ABACAuthorization
 import Foundation
 
-extension AuthorizationPolicy {
-    static func createRules(for roleName: String, allRulesPermitsAccess permits: Bool) -> [AuthorizationPolicy] {
+extension ABACAuthorizationPolicyModel {
+    static func createRules(for roleName: String, allRulesPermitsAccess permits: Bool) -> [ABACAuthorizationPolicyModel] {
         
         let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)authorization-policies"
-        let readAuthPolicy = AuthorizationPolicy(
+        let readAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionOnResource: readAuthPolicyActionOnResource,
             actionOnResourceValue: permits)
         
         let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)authorization-policies"
-        let writeAuthPolicy = AuthorizationPolicy(
+        let writeAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionOnResource: createAuthPolicyActionOnResource,
             actionOnResourceValue: permits)
         
         let readRoleActionOnResource = "\(ABACAPIAction.read)roles"
-        let readRole = AuthorizationPolicy(
+        let readRole = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionOnResource: readRoleActionOnResource,
             actionOnResourceValue: permits)
@@ -26,10 +26,10 @@ extension AuthorizationPolicy {
     }
 }
 
-extension ConditionValueDB {
-    static func createConditionValues(dummyRef: String, dummyVal: String) -> [ConditionValueDB] {
+extension ABACConditionModel {
+    static func createConditionValues(dummyRef: String, dummyVal: String) -> [ABACConditionModel] {
         let dummyId = UUID()
-        let conditionValue = ConditionValueDB(type: .string, operation: .equal, lhsType: .reference, lhs: dummyRef, rhsType: .value, rhs: dummyVal, authorizationPolicyId: dummyId)
+        let conditionValue = ABACConditionModel(type: .string, operation: .equal, lhsType: .reference, lhs: dummyRef, rhsType: .value, rhs: dummyVal, authorizationPolicyId: dummyId)
         return [conditionValue]
     
     }

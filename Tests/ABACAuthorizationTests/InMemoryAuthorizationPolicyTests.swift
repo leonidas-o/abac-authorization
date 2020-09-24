@@ -6,7 +6,7 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     // MARK: - Subject under test
     
-    var sut: AuthorizationPolicyService!
+    var sut: ABACAuthorizationPolicyService!
 
     enum Constant {
         static let existingToken = "existing-token"
@@ -18,7 +18,7 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        sut = AuthorizationPolicyService.shared
+        sut = ABACAuthorizationPolicyService.shared
     }
 
     override func tearDown() {
@@ -36,7 +36,7 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     func testAddRuleWithoutConditionValues() {
         // Given
-        let rules = AuthorizationPolicy.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
         
         // When
         let rulesCountBefore = sut.authPolicyCollection[Constant.adminRoleName]?.count
@@ -55,8 +55,8 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     func testAddRuleWithOneConditionValue() {
         // Given
-        let rules = AuthorizationPolicy.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
-        let conditionValues = ConditionValueDB.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         
         // When
         let rulesCountBefore = sut.authPolicyCollection[Constant.adminRoleName]?.count
@@ -85,8 +85,8 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     func testRemoveRule() {
         // Given
-        let rules = AuthorizationPolicy.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
-        let conditionValues = ConditionValueDB.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
                 try! sut.addToInMemoryCollection(
@@ -112,8 +112,8 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     func testRemoveConditionValueInRule() {
         // Given
-        let rules = AuthorizationPolicy.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
-        let conditionValues = ConditionValueDB.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
                 try! sut.addToInMemoryCollection(
@@ -143,8 +143,8 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
 
     func testRemoveAllRules() {
         // Given
-        let rules = AuthorizationPolicy.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
-        let conditionValues = ConditionValueDB.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
                 try! sut.addToInMemoryCollection(

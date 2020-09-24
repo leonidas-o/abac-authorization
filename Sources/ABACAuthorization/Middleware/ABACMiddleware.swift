@@ -4,13 +4,13 @@ import Foundation
 
 public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
-    private let authorizationPolicyService: AuthorizationPolicyService
+    private let authorizationPolicyService: ABACAuthorizationPolicyService
     private let cache: ABACCacheStore
     private let apiResource: ABACAPIResourceable
     
     
     public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiResource: ABACAPIResourceable) {
-        self.authorizationPolicyService = AuthorizationPolicyService.shared
+        self.authorizationPolicyService = ABACAuthorizationPolicyService.shared
         self.cache = cache
         self.apiResource = apiResource
     }
@@ -185,7 +185,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     private func evaluateConditionOperation<T: Comparable>(_ t: T.Type, conditionValue: ConditionValuable, userDataMirror: Mirror) throws -> Bool {
         switch (conditionValue.lhsType, conditionValue.rhsType) {
         case (.reference, .reference):
-            guard let conditionValue = conditionValue as? AuthorizationPolicyService.ConditionValue<String, String, T> else {
+            guard let conditionValue = conditionValue as? ABACAuthorizationPolicyService.ConditionValue<String, String, T> else {
                 throw Abort(.internalServerError)
             }
             
@@ -195,21 +195,21 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
             let rhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: rhsComponents)
             return conditionValue.operation(lhs, rhs)
         case (.reference, .value):
-            guard let conditionValue = conditionValue as? AuthorizationPolicyService.ConditionValue<String, T, T> else {
+            guard let conditionValue = conditionValue as? ABACAuthorizationPolicyService.ConditionValue<String, T, T> else {
                 throw Abort(.internalServerError)
             }
             let lhsComponents: [MirrorPath] = conditionValue.lhs.components(separatedBy: ".").toMirrorPath()
             let lhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: lhsComponents)
             return conditionValue.operation(lhs, conditionValue.rhs)
         case (.value, .reference):
-            guard let conditionValue = conditionValue as? AuthorizationPolicyService.ConditionValue<T, String, T> else {
+            guard let conditionValue = conditionValue as? ABACAuthorizationPolicyService.ConditionValue<T, String, T> else {
                 throw Abort(.internalServerError)
             }
             let rhsComponents: [MirrorPath] = conditionValue.rhs.components(separatedBy: ".").toMirrorPath()
             let rhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: rhsComponents)
             return conditionValue.operation(conditionValue.lhs, rhs)
         case (.value, .value):
-            guard let conditionValue = conditionValue as? AuthorizationPolicyService.ConditionValue<T, T, T> else {
+            guard let conditionValue = conditionValue as? ABACAuthorizationPolicyService.ConditionValue<T, T, T> else {
                 throw Abort(.internalServerError)
             }
             return conditionValue.operation(conditionValue.lhs, conditionValue.rhs)

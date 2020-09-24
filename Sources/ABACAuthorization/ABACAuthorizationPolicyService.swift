@@ -7,16 +7,16 @@ protocol AuthorizationValuable {
 }
 
 protocol ConditionValuable {
-    var type: ConditionValueDB.ConditionValueType { get set }
-    var lhsType: ConditionValueDB.ConditionLhsRhsType { get set }
-    var rhsType: ConditionValueDB.ConditionLhsRhsType { get set }
+    var type: ABACConditionModel.ConditionValueType { get set }
+    var lhsType: ABACConditionModel.ConditionType { get set }
+    var rhsType: ABACConditionModel.ConditionType { get set }
 }
 
 
 
-public final class AuthorizationPolicyService {
+public final class ABACAuthorizationPolicyService {
     
-    static let shared = AuthorizationPolicyService()
+    static let shared = ABACAuthorizationPolicyService()
     
     private init() {}
     
@@ -39,8 +39,8 @@ public final class AuthorizationPolicyService {
 
 
 extension Application {
-    var authorizationPolicyService: AuthorizationPolicyService {
-        return AuthorizationPolicyService.shared
+    var authorizationPolicyService: ABACAuthorizationPolicyService {
+        return ABACAuthorizationPolicyService.shared
     }
 }
 
@@ -49,17 +49,17 @@ extension Application {
 
 // MARK: - Structure
 
-extension AuthorizationPolicyService {
+extension ABACAuthorizationPolicyService {
     struct AuthorizationValues: AuthorizationValuable {
         var actionOnResourceValue: Bool
         var conditionValue: ConditionValuable?
     }
     
     struct ConditionValue<LhsT: Comparable, RhsT: Comparable, OpsT: Comparable>: ConditionValuable {
-        var type: ConditionValueDB.ConditionValueType
-        var lhsType: ConditionValueDB.ConditionLhsRhsType
+        var type: ABACConditionModel.ConditionValueType
+        var lhsType: ABACConditionModel.ConditionType
         var lhs: LhsT
-        var rhsType: ConditionValueDB.ConditionLhsRhsType
+        var rhsType: ABACConditionModel.ConditionType
         var rhs: RhsT
         var operation: ((OpsT, OpsT) -> Bool)
     }
@@ -71,11 +71,11 @@ extension AuthorizationPolicyService {
 
 // MARK: - Helper Methods
 
-extension AuthorizationPolicyService {
-    public func addToInMemoryCollection(authPolicy: AuthorizationPolicy, conditionValues: [ConditionValueDB]) throws {
+extension ABACAuthorizationPolicyService {
+    public func addToInMemoryCollection(authPolicy: ABACAuthorizationPolicyModel, conditionValues: [ABACConditionModel]) throws {
         if conditionValues.isEmpty {
             let authValues = try prepareInMemoryAuthorizationValues(authPolicy, conditionValue: nil)
-            add(authPolicy: authPolicy, conditionKey: ConditionValueDB.Constant.defaultConditionKey, authValues: authValues)
+            add(authPolicy: authPolicy, conditionKey: ABACConditionModel.Constant.defaultConditionKey, authValues: authValues)
         } else {
             for conditionValue in conditionValues {
                 let authValues = try prepareInMemoryAuthorizationValues(authPolicy, conditionValue: conditionValue)
@@ -84,7 +84,7 @@ extension AuthorizationPolicyService {
         }
     }
     
-    private func add(authPolicy: AuthorizationPolicy, conditionKey: String, authValues: AuthorizationValues) {
+    private func add(authPolicy: ABACAuthorizationPolicyModel, conditionKey: String, authValues: AuthorizationValues) {
         if self.authPolicyCollection[authPolicy.roleName] == nil {
             self.authPolicyCollection[authPolicy.roleName] = [authPolicy.actionOnResourceKey:[conditionKey:authValues]]
         }
@@ -97,12 +97,12 @@ extension AuthorizationPolicyService {
 
 
 
-extension AuthorizationPolicyService {
-    func removeFromInMemoryCollection(authPolicy: AuthorizationPolicy) {
+extension ABACAuthorizationPolicyService {
+    func removeFromInMemoryCollection(authPolicy: ABACAuthorizationPolicyModel) {
         self.authPolicyCollection[authPolicy.roleName]?.removeValue(forKey: authPolicy.actionOnResourceKey)
     }
     
-    func removeFromInMemoryCollection(conditionValue: ConditionValueDB, in authPolicy: AuthorizationPolicy) {
+    func removeFromInMemoryCollection(conditionValue: ABACConditionModel, in authPolicy: ABACAuthorizationPolicyModel) {
         self.authPolicyCollection[authPolicy.roleName]?[authPolicy.actionOnResourceKey]?.removeValue(forKey: conditionValue.key)
     }
     
@@ -113,8 +113,8 @@ extension AuthorizationPolicyService {
 
 
 
-extension AuthorizationPolicyService {
-    private func prepareInMemoryAuthorizationValues(_ authPolicy: AuthorizationPolicy, conditionValue: ConditionValueDB?) throws -> AuthorizationValues {
+extension ABACAuthorizationPolicyService {
+    private func prepareInMemoryAuthorizationValues(_ authPolicy: ABACAuthorizationPolicyModel, conditionValue: ABACConditionModel?) throws -> AuthorizationValues {
         
         guard let conditionValue = conditionValue else {
             return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: nil)
@@ -223,7 +223,7 @@ extension AuthorizationPolicyService {
         }
     }
     
-    private func determineConditionOperation<T: Comparable>(forConditionType type: T.Type, fromConditionOperation operation: ConditionValueDB.ConditionOperationType) -> ((T, T) -> Bool) {
+    private func determineConditionOperation<T: Comparable>(forConditionType type: T.Type, fromConditionOperation operation: ABACConditionModel.ConditionOperationType) -> ((T, T) -> Bool) {
                 
         switch operation {
         case .equal:
