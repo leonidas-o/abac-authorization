@@ -73,54 +73,69 @@ It is recommended to create a minimal set of rules to read, create auth policies
 ```swift
 struct AdminAuthorizationPolicyRestricted: Migration {
     
-    func prepare(on conn: Database) -> EventLoopFuture<Void> {
-        
-        Role.query(on: conn).first().unwrap(or: Abort(.internalServerError)).flatMap { role in
+    let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)\(APIResource.Resource.authorizationPolicies.rawValue)"
+    let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)\(APIResource.Resource.authorizationPolicies.rawValue)"
+    let readRoleActionOnResource = "\(ABACAPIAction.read)\(APIResource.Resource.rolesInternal.rawValue)"
+    let readAuthActionOnResource = "\(ABACAPIAction.read)\(APIResource.Resource.auth.rawValue)"
+    
+    
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        RoleModel.query(on: database).first().unwrap(or: Abort(.internalServerError)).flatMap { role in
             
-            let readAuthPolicyActionOnResource = "\(APIAction.read)\(APIResource.authorizationPolicyResource.rawValue)"
-            let readAuthPolicy = AuthorizationPolicy(
+            let readAuthPolicy = ABACAuthorizationPolicyModel(
                 roleName: role.name,
                 actionOnResource: readAuthPolicyActionOnResource,
                 actionOnResourceValue: true)
             
-            let createAuthPolicyActionOnResource = "\(APIAction.create)\(APIResource.authorizationPolicyResource.rawValue)"
-            let writeAuthPolicy = AuthorizationPolicy(
+            let writeAuthPolicy = ABACAuthorizationPolicyModel(
                 roleName: role.name,
                 actionOnResource: createAuthPolicyActionOnResource,
                 actionOnResourceValue: true)
             
-            let readRoleActionOnResource = "\(APIAction.read)\(APIResource.rolesResource.rawValue)"
-            let readRole = AuthorizationPolicy(
+            let readRole = ABACAuthorizationPolicyModel(
                 roleName: role.name,
                 actionOnResource: readRoleActionOnResource,
                 actionOnResourceValue: true)
             
+            let readAuth = ABACAuthorizationPolicyModel(
+                roleName: role.name,
+                actionOnResource: readAuthActionOnResource,
+                actionOnResourceValue: true)
             
-            let policySaveResults: [Future<AuthorizationPolicy>] = [
-                readAuthPolicy.save(on: conn),
-                writeAuthPolicy.save(on: conn),
-                readRole.save(on: conn)
+            
+            let policySaveResults: [EventLoopFuture<Void>] = [
+                readAuthPolicy.save(on: database),
+                writeAuthPolicy.save(on: database),
+                readRole.save(on: database),
+                readAuth.save(on: database)
             ]
-            policySaveResults.flatten(on: conn).transform(to: ())
+            return policySaveResults.flatten(on: database.eventLoop)
         }
-        
     }
     
-    func revert(on conn: Database) -> EventLoopFuture<Void> {
-        AuthorizationPolicy.query(on: database)
-        .filter(\.$roleName == role.name)
-        .filter(\(.$actionOnResource) == "\(APIAction.read)\(APIResource.authorizationPolicyResource.rawValue)")
-        .delete()
-        
-        AuthorizationPolicy.query(on: database)
-        .filter(\.$roleName == role.name)
-        .filter(\(.$actionOnResource) == "\(APIAction.create)\(APIResource.authorizationPolicyResource.rawValue)")
-        .delete()
-        
-        AuthorizationPolicy.query(on: database)
-        .filter(\.$roleName == role.name)
-        .filter(\(.$actionOnResource) == "\(APIAction.read)\(APIResource.rolesResource.rawValue)")
-        .delete()
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        RoleModel.query(on: database).first().unwrap(or: Abort(.internalServerError)).flatMap { role in
+            
+            let deleteResults = [
+                ABACAuthorizationPolicyModel.query(on: database)
+                    .filter(\.$roleName == role.name)
+                    .filter(\.$actionOnResourceKey == readAuthPolicyActionOnResource)
+                    .delete(),
+                ABACAuthorizationPolicyModel.query(on: database)
+                    .filter(\.$roleName == role.name)
+                    .filter(\.$actionOnResourceKey == createAuthPolicyActionOnResource)
+                    .delete(),
+                ABACAuthorizationPolicyModel.query(on: database)
+                    .filter(\.$roleName == role.name)
+                    .filter(\.$actionOnResourceKey == readRoleActionOnResource)
+                    .delete(),
+                ABACAuthorizationPolicyModel.query(on: database)
+                    .filter(\.$roleName == role.name)
+                    .filter(\.$actionOnResourceKey == readAuthActionOnResource)
+                    .delete(),
+            ]
+            deleteResults.flatten(on: database.eventLoop)
+        }
     }
 }
 ```

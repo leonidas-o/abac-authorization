@@ -12,7 +12,7 @@ public protocol ABACAuthorizationPolicyDefinition {
 }
 
 
-
+/// Fluent Model
 public final class ABACAuthorizationPolicyModel: Model {
     
     public static let schema = "abac_authorization_policy"
@@ -22,7 +22,7 @@ public final class ABACAuthorizationPolicyModel: Model {
     @Field(key: "action_on_resource_key") public var actionOnResourceKey: String
     @Field(key: "action_on_resource_value") public var actionOnResourceValue: Bool
     
-    @Children(for: \.$authorizationPolicy) public var conditionValues: [ABACConditionModel]
+    @Children(for: \.$authorizationPolicy) public var conditions: [ABACConditionModel]
     
     
     public init() {}
@@ -71,7 +71,7 @@ public struct AuthorizationPolicyMiddleware: ModelMiddleware {
         // before operation
         return next.update(model, on: db).map {
             // after operation
-            _ = model.$conditionValues.query(on: db).all().flatMapThrowing { conditionValuesDB in
+            _ = model.$conditions.query(on: db).all().flatMapThrowing { conditionValuesDB in
                 try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: model, conditionValues: conditionValuesDB)
             }
         }

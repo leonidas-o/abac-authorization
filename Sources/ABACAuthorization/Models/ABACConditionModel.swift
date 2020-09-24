@@ -3,24 +3,25 @@ import Fluent
 import FluentPostgresDriver
 import Foundation
 
+/// Fluent Model
 public final class ABACConditionModel: Model {
     
     public enum Constant {
         public static let defaultConditionKey = "default"
     }
     
-    public enum ConditionValueType: String, Codable {
+    public enum ConditionValueType: String, Codable, CaseIterable {
         case string
         case int
         case double
     }
     
-    public enum ConditionType: String, Codable {
+    public enum ConditionType: String, Codable, CaseIterable {
         case value
         case reference
     }
     
-    public enum ConditionOperationType: String, Codable {
+    public enum ConditionOperationType: String, Codable, CaseIterable {
         case equal = "=="
         case notEqual = "!="
         case greaterThan = ">"
@@ -109,7 +110,7 @@ public struct ConditionValueDBMiddleware: ModelMiddleware {
         return next.update(model, on: db).map {
             // after operation
             _ = model.$authorizationPolicy.get(on: db).flatMapThrowing { authPolicy in
-                return authPolicy.$conditionValues.query(on: db).all().flatMapThrowing { conditionValues in
+                return authPolicy.$conditions.query(on: db).all().flatMapThrowing { conditionValues in
                     try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: authPolicy, conditionValues: conditionValues)
                 }
             }
@@ -121,7 +122,7 @@ public struct ConditionValueDBMiddleware: ModelMiddleware {
         return next.create(model, on: db).map {
             // after operation
             _ = model.$authorizationPolicy.get(on: db).flatMapThrowing { authPolicy in
-                return authPolicy.$conditionValues.query(on: db).all().flatMapThrowing { conditionValues in
+                return authPolicy.$conditions.query(on: db).all().flatMapThrowing { conditionValues in
                     try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: authPolicy, conditionValues: conditionValues)
                 }
             }
