@@ -1,6 +1,6 @@
 import Foundation
 
-/// Domain Transfer Object - DTO
+/// Data Transfer Object - DTO
 public struct ABACCondition: Codable {
     
     var id: UUID?

@@ -22,15 +22,87 @@ In your `package.swift` add the abac-authorization package
 ```
 
 ### Setup and conform Models
-- Vapor Models conforming to:
-    - ABACUser
-    - ABACRole
-    - ABACUserData
-    - ABACAccessData
-- Cache store conforming to:
-    - ABACCacheStore
-- APIResource conforming to:
-    - ABACAPIResourceable
+
+#### Overview
+- Setup fluent models:
+    - *YourUserModel* conforming to `ABACUser`
+    - *YourRoleModel* conforming to `ABACRole`
+    - *YourUserDataModel* conforming to `ABACUserData`
+    - *YourAccessDataModel* conforming to `ABACAccessData`
+- Setup your cache store/repository:
+    - *YourCacheStore* conforming to `ABACCacheStore`
+- Setup a resources collection struct:
+    - *APIResource* conforming to `ABACAPIResourceable`
+
+
+#### Details
+**YourUserMode** 
+1. No specific requirements, (model should conform to Codable)
+2. Conform to `ABACUser`
+**YourRoleModel**
+1. Needs a  `name` property (model should conform to Codable)
+3. Setup the `name` property with a `unique` constraint inside your models Migration
+4. Conform to `ABACRole`
+**YourUserDataModel**
+1. Needs a `roles` property - Array of roles (model should conform to Codable)
+2. Conform to `ABACUserData`
+// TODO
+
+
+**APIResource**
+A simple struct holding your resources, could look like:
+```swift
+struct APIResource {
+    
+    static let _apiEntry: String = "api"
+    
+    static let _all: [String] = Resource.allCases.map { $0.rawValue }.sorted { $0 < $1 }
+    
+    // contains all resources
+    enum Resource: String, CaseIterable {
+        case auth = "auth"
+        case login = "login"
+        case logout = "logout" 
+        case accessData = "access-data"
+        case registration = "registration"
+        case authorizationPolicies = "authorization-policies"
+        case users = "users"
+        case myUser = "my-user"
+        case roles = "roles"
+        case conditions = "conditions"
+    }
+    
+    init() {}
+}
+
+// contains all protected resources where
+// ABACAuthorization is used
+extension APIResource {
+    public static let _allProtected: [String] = [
+        APIResource.Resource.authorizationPolicies,
+        APIResource.Resource.auth,
+        APIResource.Resource.conditions,
+        APIResource.Resource.users
+    ].map { $0.rawValue }.sorted { $0 < $1 }
+}
+```
+
+Example `APIResource` conforming to `ABACAPIResourceable`
+```swift
+extension APIResource: ABACAPIResourceable {
+    
+    public var apiEntry: String {
+        return APIResource._apiEntry
+    }
+    
+    public var protectedResources: [String] {
+        return APIResource._allProtected
+    }
+}
+
+```
+
+
 
 
 ### Define 
@@ -39,30 +111,34 @@ In your `package.swift` add the abac-authorization package
 struct AdminUser: Migration {
     
     enum Constant {
+        static let isEnabled = true
         static let firstName = "Admin"
         static let lastName = "Admin"
-        static let additionalName = "Admin"
-        static let email = "webmaster@foo.com"
+        static let email = "webmaster@nuvariant.com"
+        static let passwordLength = 16
     }
     
+    
+    
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        let randomPassword = (try? CryptoRandom().generateData(count: 16).base64EncodedString())!
-        print("\nPASSWORD: \(randomPassword)")
-        let password = try? BCrypt.hash(randomPassword)
+        let random = [UInt8].random(count: Constant.passwordLength).base64
+        print("\nPASSWORD: \(random)") // TODO: use logger
+        let password = try? Bcrypt.hash(random)
         guard let hashedPassword = password else {
             fatalError("Failed to create admin user")
         }
-        let user = User(
-            name: Constant.lastName,
-            email: Constant.email,
-            passwordHash: hashedPassword)
-        user.save(on: database)
+        
+        let user = UserModel(isEnabled: Constant.isEnabled,
+                             firstName: Constant.firstName,
+                             lastName: Constant.lastName,
+                             email: Constant.email,
+                             password: hashedPassword)
+        return user.save(on: database)
     }
     
     func revert(on database: Database) -> EventLoopFuture<Void> {
-        User.query(on: database)
-        .filter(\.$email == Constant.email)
-        .delete()
+        UserModel.query(on: database).filter(\.$email == Constant.email)
+            .delete()
     }
 }
 ```
