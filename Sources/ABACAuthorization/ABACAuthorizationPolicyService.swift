@@ -39,7 +39,7 @@ public final class ABACAuthorizationPolicyService {
 
 
 extension Application {
-    var authorizationPolicyService: ABACAuthorizationPolicyService {
+    public var authorizationPolicyService: ABACAuthorizationPolicyService {
         return ABACAuthorizationPolicyService.shared
     }
 }

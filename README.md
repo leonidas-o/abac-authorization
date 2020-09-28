@@ -25,10 +25,10 @@ In your `package.swift` add the abac-authorization package
 
 #### Overview
 - Setup fluent models:
-    - *YourUserModel* conforming to `ABACUser`
-    - *YourRoleModel* conforming to `ABACRole`
-    - *YourUserDataModel* conforming to `ABACUserData`
-    - *YourAccessDataModel* conforming to `ABACAccessData`
+    - Your *User* model conforming to `ABACUser`
+    - Your *Role* model conforming to `ABACRole`
+    - Your *UserData* model conforming to `ABACUserData`
+    - Your *AccessData* model conforming to `ABACAccessData`
 - Setup your cache store/repository:
     - *YourCacheStore* conforming to `ABACCacheStore`
 - Setup a resources collection struct:
@@ -36,17 +36,24 @@ In your `package.swift` add the abac-authorization package
 
 
 #### Details
-**YourUserMode** 
+
+Your **User** Model 
 1. No specific requirements, (model should conform to Codable)
 2. Conform to `ABACUser`
-**YourRoleModel**
+
+Your **Role** Model
 1. Needs a  `name` property (model should conform to Codable)
 3. Setup the `name` property with a `unique` constraint inside your models Migration
 4. Conform to `ABACRole`
-**YourUserDataModel**
+
+Your **UserData** Model
 1. Needs a `roles` property - Array of roles (model should conform to Codable)
 2. Conform to `ABACUserData`
 // TODO
+
+Your **AccessData** model
+1.
+
 
 
 **APIResource**
