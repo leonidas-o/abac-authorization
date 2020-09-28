@@ -31,7 +31,7 @@ public final class ABACConditionModel: Model {
     }
     
     
-    public static let schema = "condition_value_db"
+    public static let schema = "abac_condition"
     
     
     @ID(key: .id) public var id: UUID?
@@ -80,7 +80,7 @@ extension ABACConditionModel: Content {}
 
 public struct ConditionValueDBMigration: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("condition_value_db")
+        database.schema("abac_condition")
             .id()
             .field("key", .string, .required)
             .field("type", .string, .required)
@@ -95,7 +95,7 @@ public struct ConditionValueDBMigration: Migration {
     }
     
     public func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("condition_value_db")
+        database.schema("abac_condition")
             .delete()
     }
 }
