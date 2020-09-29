@@ -5,11 +5,11 @@ import Foundation
 public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     private let authorizationPolicyService: ABACAuthorizationPolicyService
-    private let cache: ABACCacheStore
+    private let cache: ABACCacheRepo
     private let apiResource: ABACAPIResourceable
     
     
-    public init(_ type: AD.Type = AD.self, cache: ABACCacheStore, apiResource: ABACAPIResourceable) {
+    public init(_ type: AD.Type = AD.self, cache: ABACCacheRepo, apiResource: ABACAPIResourceable) {
         self.authorizationPolicyService = ABACAuthorizationPolicyService.shared
         self.cache = cache
         self.apiResource = apiResource

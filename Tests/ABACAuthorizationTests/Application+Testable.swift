@@ -3,6 +3,7 @@ import Vapor
 import Foundation
 
 
+// TODO: V3 deprecated, clean me up
 //extension Application {
 //    static func testable(envArgs: [String]? = nil) throws -> Application {
 //        let services = Services.default()

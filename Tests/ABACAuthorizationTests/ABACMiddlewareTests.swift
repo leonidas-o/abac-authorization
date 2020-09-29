@@ -30,7 +30,7 @@ final class ABACMiddlewareTests: XCTestCase {
     
     // MARK: - Test doubles
 
-    final class ABACCacheStoreSpy: ABACCacheStore {
+    final class ABACCacheRepoSpy: ABACCacheRepo {
         let eventLoop: EventLoop
         
         init(eventLoop: EventLoop) {
@@ -103,7 +103,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheStoreSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
         app.routes.grouped(sut).get("\(apiResource.apiEntry)", "\(APIResource.Resource.authorizationPolicy.rawValue)") { req in
@@ -139,7 +139,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheStoreSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
         app.routes.grouped(sut).get("\(apiResource.apiEntry)", "\(APIResource.Resource.authorizationPolicy.rawValue)") { req in
@@ -178,7 +178,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheStoreSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
         app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
@@ -209,7 +209,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheStoreSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
         app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
@@ -243,7 +243,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheStoreSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
         app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
@@ -281,7 +281,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheStoreSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
         app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
@@ -327,7 +327,7 @@ final class ABACMiddlewareTests: XCTestCase {
         
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheStoreSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
         app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
