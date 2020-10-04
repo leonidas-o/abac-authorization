@@ -51,7 +51,7 @@ extension ABACAuthorizationPolicyModel: Content {}
 // MARK: - DTO conversions
 
 extension ABACAuthorizationPolicyModel {
-    func convertToABACAuthorizationPolicy() -> ABACAuthorizationPolicy {
+    public func convertToABACAuthorizationPolicy() -> ABACAuthorizationPolicy {
         return ABACAuthorizationPolicy(id: id,
                                        roleName: roleName,
                                        actionOnResourceKey: actionOnResourceKey,
