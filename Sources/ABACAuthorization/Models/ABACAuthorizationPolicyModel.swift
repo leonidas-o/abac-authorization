@@ -60,6 +60,15 @@ extension ABACAuthorizationPolicyModel {
     }
 }
 
+extension ABACAuthorizationPolicy {
+    public func convertToABACAuthorizationPolicyModel() -> ABACAuthorizationPolicyModel {
+        return ABACAuthorizationPolicyModel(id: id,
+                                            roleName: roleName,
+                                            actionOnResourceKey: actionOnResourceKey,
+                                            actionOnResourceValue: actionOnResourceValue)
+    }
+}
+
 
 
 // MARK: - Migration
