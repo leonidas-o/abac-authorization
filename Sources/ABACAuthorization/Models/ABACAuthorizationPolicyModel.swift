@@ -27,7 +27,11 @@ public final class ABACAuthorizationPolicyModel: Model {
     
     public init() {}
     
-    public init(roleName: String, actionOnResource: String, actionOnResourceValue: Bool) {
+    public init(id: UUID? = nil,
+                roleName: String,
+                actionOnResource: String,
+                actionOnResourceValue: Bool) {
+        self.id = id
         self.roleName = roleName
         self.actionOnResourceKey = actionOnResource
         self.actionOnResourceValue = actionOnResourceValue

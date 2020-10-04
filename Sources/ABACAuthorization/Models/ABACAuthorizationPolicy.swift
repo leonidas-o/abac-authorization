@@ -12,7 +12,7 @@ public struct ABACAuthorizationPolicy: Codable {
     public var _csrfToken: String?
     
     
-    public init(id: UUID,
+    public init(id: UUID? = nil,
                 roleName: String,
                 actionOnResource: String,
                 actionOnResourceValue: Bool,

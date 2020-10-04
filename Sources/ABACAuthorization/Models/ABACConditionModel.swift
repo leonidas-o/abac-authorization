@@ -49,7 +49,8 @@ public final class ABACConditionModel: Model {
     public init() {}
     
     
-    init(key: String = Constant.defaultConditionKey,
+    init(id: UUID? = nil,
+         key: String = Constant.defaultConditionKey,
          type: ConditionValueType,
          operation: ConditionOperationType,
          lhsType: ConditionType,
@@ -57,6 +58,7 @@ public final class ABACConditionModel: Model {
          rhsType: ConditionType,
          rhs: String,
          authorizationPolicyId: ABACAuthorizationPolicyModel.IDValue) {
+        self.id = id
         self.key = key
         self.type = type
         self.operation = operation
