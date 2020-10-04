@@ -48,6 +48,20 @@ extension ABACAuthorizationPolicyModel: Content {}
 
 
 
+// MARK: - DTO conversions
+
+extension ABACAuthorizationPolicyModel {
+    func convertToABACAuthorizationPolicy() -> ABACAuthorizationPolicy {
+        return ABACAuthorizationPolicy(id: id,
+                                       roleName: roleName,
+                                       actionOnResourceKey: actionOnResourceKey,
+                                       actionOnResourceValue: actionOnResourceValue,
+                                       conditions: [])
+    }
+}
+
+
+
 // MARK: - Migration
 
 public struct AuthorizationPolicyMigration: Migration {
