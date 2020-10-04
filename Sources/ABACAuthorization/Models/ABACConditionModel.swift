@@ -81,7 +81,7 @@ extension ABACConditionModel: Content {}
 // MARK: - DTO conversions
 
 extension ABACConditionModel {
-    func convertToABACCondition() -> ABACCondition? {
+    public func convertToABACCondition() -> ABACCondition? {
         if let authorizationPolicyId = authorizationPolicy.id {
             return ABACCondition(id: id,
                                  key: key,
@@ -97,7 +97,6 @@ extension ABACConditionModel {
         }
     }
 }
-
 
 
 
