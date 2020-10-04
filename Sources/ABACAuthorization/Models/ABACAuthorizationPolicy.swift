@@ -23,7 +23,7 @@ public struct ABACAuthorizationPolicy: Codable {
         self.actionOnResourceKey = actionOnResource
         self.actionOnResourceValue = actionOnResourceValue
         self.conditions = conditions
-        // extra fields
+        // optional extra fields
         self._csrfToken = _csrfToken
     }
 }

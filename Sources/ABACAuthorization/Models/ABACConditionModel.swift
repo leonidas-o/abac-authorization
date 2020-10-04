@@ -78,6 +78,29 @@ extension ABACConditionModel: Content {}
 
 
 
+// MARK: - DTO conversions
+
+extension ABACConditionModel {
+    func convertToABACCondition() -> ABACCondition? {
+        if let authorizationPolicyId = authorizationPolicy.id {
+            return ABACCondition(id: id,
+                                 key: key,
+                                 type: type,
+                                 operation: operation,
+                                 lhsType: lhsType,
+                                 lhs: lhs,
+                                 rhsType: rhsType,
+                                 rhs: rhs,
+                                 authorizationPolicyID: authorizationPolicyId)
+        } else {
+            return nil
+        }
+    }
+}
+
+
+
+
 // MARK: - Migration
 
 public struct ConditionValueDBMigration: Migration {

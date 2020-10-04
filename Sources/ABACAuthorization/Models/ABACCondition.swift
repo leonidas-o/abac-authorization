@@ -24,7 +24,7 @@ public struct ABACCondition: Codable {
                   rhsType: ABACConditionModel.ConditionType,
                   rhs: String,
                   authorizationPolicyID: UUID,
-                  _csrfToken: String?) {
+                  _csrfToken: String? = nil) {
         self.id = id
         self.key = key
         self.type = type
@@ -34,6 +34,7 @@ public struct ABACCondition: Codable {
         self.rhsType = rhsType
         self.rhs = rhs
         self.authorizationPolicyID = authorizationPolicyID
+        // optional extra fields
         self._csrfToken = _csrfToken
     }
 }
