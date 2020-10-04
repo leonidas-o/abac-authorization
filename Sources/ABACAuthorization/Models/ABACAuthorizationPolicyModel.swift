@@ -29,18 +29,19 @@ public final class ABACAuthorizationPolicyModel: Model {
     
     public init(id: UUID? = nil,
                 roleName: String,
-                actionOnResource: String,
+                actionOnResourceKey: String,
                 actionOnResourceValue: Bool) {
         self.id = id
         self.roleName = roleName
-        self.actionOnResourceKey = actionOnResource
+        self.actionOnResourceKey = actionOnResourceKey
         self.actionOnResourceValue = actionOnResourceValue
     }
 }
 
 
 
-// MARK: - Conformances
+// MARK: - General conformances
+
 extension ABACAuthorizationPolicyModel: ABACAuthorizationPolicyDefinition {}
 
 extension ABACAuthorizationPolicyModel: Content {}

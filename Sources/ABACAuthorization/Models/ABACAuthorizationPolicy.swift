@@ -14,13 +14,13 @@ public struct ABACAuthorizationPolicy: Codable {
     
     public init(id: UUID? = nil,
                 roleName: String,
-                actionOnResource: String,
+                actionOnResourceKey: String,
                 actionOnResourceValue: Bool,
                 conditions: [ABACCondition] = [],
                 _csrfToken: String? = nil) {
         self.id = id
         self.roleName = roleName
-        self.actionOnResourceKey = actionOnResource
+        self.actionOnResourceKey = actionOnResourceKey
         self.actionOnResourceValue = actionOnResourceValue
         self.conditions = conditions
         // optional extra fields
