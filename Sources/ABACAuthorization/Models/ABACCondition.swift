@@ -3,19 +3,19 @@ import Foundation
 /// Data Transfer Object - DTO
 public struct ABACCondition: Codable {
     
-    var id: UUID?
-    var key: String
-    var type: ABACConditionModel.ConditionValueType
-    var operation: ABACConditionModel.ConditionOperationType
-    var lhsType: ABACConditionModel.ConditionType
-    var lhs: String
-    var rhsType: ABACConditionModel.ConditionType
-    var rhs: String
-    var authorizationPolicyID: UUID
+    public var id: UUID?
+    public var key: String
+    public var type: ABACConditionModel.ConditionValueType
+    public var operation: ABACConditionModel.ConditionOperationType
+    public var lhsType: ABACConditionModel.ConditionType
+    public var lhs: String
+    public var rhsType: ABACConditionModel.ConditionType
+    public var rhs: String
+    public var authorizationPolicyID: UUID
     // optional extra fields
-    let _csrfToken: String?
+    public let _csrfToken: String?
     
-    internal init(id: UUID? = nil,
+    public init(id: UUID? = nil,
                   key: String,
                   type: ABACConditionModel.ConditionValueType,
                   operation: ABACConditionModel.ConditionOperationType,
