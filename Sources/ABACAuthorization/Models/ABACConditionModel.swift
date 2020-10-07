@@ -104,6 +104,9 @@ extension ABACConditionModel {
 // MARK: - Migration
 
 public struct ABACConditionModelMigration: Migration {
+    
+    public init() {}
+    
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema("abac_condition")
             .id()
