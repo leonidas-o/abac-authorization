@@ -73,7 +73,7 @@ extension ABACAuthorizationPolicy {
 
 // MARK: - Migration
 
-public struct AuthorizationPolicyMigration: Migration {
+public struct ABACAuthorizationPolicyModelMigration: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema("abac_authorization_policy")
         .id()
@@ -94,7 +94,7 @@ public struct AuthorizationPolicyMigration: Migration {
 
 // MARK: - ModelMiddleware
 
-public struct AuthorizationPolicyMiddleware: ModelMiddleware {
+public struct ABACAuthorizationPolicyMiddleware: ModelMiddleware {
     public func update(model: ABACAuthorizationPolicyModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
         // before operation
         return next.update(model, on: db).map {
