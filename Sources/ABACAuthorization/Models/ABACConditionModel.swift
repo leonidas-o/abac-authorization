@@ -3,6 +3,7 @@ import Fluent
 import FluentPostgresDriver
 import Foundation
 
+
 /// Fluent Model
 public final class ABACConditionModel: Model {
     
@@ -102,7 +103,7 @@ extension ABACConditionModel {
 
 // MARK: - Migration
 
-public struct ConditionValueDBMigration: Migration {
+public struct ABACConditionModelMigration: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema("abac_condition")
             .id()
@@ -128,7 +129,7 @@ public struct ConditionValueDBMigration: Migration {
 
 // MARK: - ModelMiddleware
 
-public struct ConditionValueDBMiddleware: ModelMiddleware {
+public struct ABACConditionModelMiddleware: ModelMiddleware {
     public func update(model: ABACConditionModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
         // before operation
         return next.update(model, on: db).map {
