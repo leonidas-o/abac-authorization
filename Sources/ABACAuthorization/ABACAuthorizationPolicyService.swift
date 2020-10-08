@@ -28,10 +28,10 @@ public final class ABACAuthorizationPolicyService {
     /// structure overview: [role:[actionOnResource:[condition: VALUES ]]]
     private var authPolicyCollectionValue: [String:[String:[String:AuthorizationValuable]]] = [:]
     var authPolicyCollection: [String:[String:[String:AuthorizationValuable]]] {
-        get{
+        get {
             return authPolicyQueue.sync { authPolicyCollectionValue }
         }
-        set(newValue){
+        set(newValue) {
             authPolicyQueue.async(flags: DispatchWorkItemFlags.barrier) { self.authPolicyCollectionValue = newValue }
         }
     }
@@ -39,7 +39,7 @@ public final class ABACAuthorizationPolicyService {
 
 
 extension Application {
-    public var authorizationPolicyService: ABACAuthorizationPolicyService {
+    public var abacAuthorizationPolicyService: ABACAuthorizationPolicyService {
         return ABACAuthorizationPolicyService.shared
     }
 }
@@ -83,7 +83,6 @@ extension ABACAuthorizationPolicyService {
             }
         }
     }
-    
     private func add(authPolicy: ABACAuthorizationPolicyModel, conditionKey: String, authValues: AuthorizationValues) {
         if self.authPolicyCollection[authPolicy.roleName] == nil {
             self.authPolicyCollection[authPolicy.roleName] = [authPolicy.actionOnResourceKey:[conditionKey:authValues]]
