@@ -38,12 +38,20 @@ public final class ABACAuthorizationPolicyService {
 }
 
 
+
+// MARK: - Vapor extensions
+
 extension Application {
     public var abacAuthorizationPolicyService: ABACAuthorizationPolicyService {
         return ABACAuthorizationPolicyService.shared
     }
 }
 
+extension Request {
+    public var abacAuthorizationPolicyService: ABACAuthorizationPolicyService {
+        return ABACAuthorizationPolicyService.shared
+    }
+}
 
 
 
