@@ -20,7 +20,6 @@ let package = Package(
             .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"),
             .product(name: "Vapor", package: "vapor"),
         ]),
-        .target(name: "API", dependencies: ["ABACAuthorization"]),
         .testTarget(name: "ABACAuthorizationTests", dependencies: [
             .target(name: "ABACAuthorization"),
             .product(name: "XCTVapor", package: "vapor"),
