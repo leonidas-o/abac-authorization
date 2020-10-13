@@ -98,11 +98,11 @@ Example `APIResource` conforming to `ABACAPIResourceable`
 ```swift
 extension APIResource: ABACAPIResourceable {
     
-    public var apiEntry: String {
+    public var abacApiEntry: String {
         return APIResource._apiEntry
     }
     
-    public var protectedResources: [String] {
+    public var abacProtectedResources: [String] {
         return APIResource._allProtected
     }
 }
@@ -223,7 +223,23 @@ struct AdminAuthorizationPolicyRestricted: Migration {
 }
 ```
 
-In `configure.swift` add your AdminAuthorizationPolicy migration with the minimal set of rules
+
+In `configure.swift` 
+
+Import the package (`import ABACAuthorization`) set the integrated PostgreSQL repository
+```swift
+app.abacAuthorizationRepoFactory.use { req in
+    ABACAuthorizationPostgreSQLRepo(db: req.db)
+}
+```
+
+Prepare the models
+```swift
+app.migrations.add(ABACAuthorizationPolicyModelMigration())
+app.migrations.add(ABACConditionModelMigration())
+```
+
+and add your AdminAuthorizationPolicy migration with the minimal set of rules
 ```swift
 // If it is only for testing environment otherwise just use the body
 if (app.environment != .testing) {
@@ -235,15 +251,13 @@ if (app.environment != .testing) {
 ### Load persisted rules
 In `boot.swift` load saved policies
 ```swift
-let conn = try app.newConnection(to: .psql).wait()
 
 // MARK: Authorization
 
-let rules = try AuthorizationPolicy.query(on: conn).all().wait()
-let authorizationPolicyService = try app.authorizationPolicyService
+let rules = try ABACAuthorizationPolicyModel.query(on: app.db).all().wait()
 for rule in rules {
-    let conditionValues = try rule.conditionValues.query(on: conn).all().wait()
-    try authorizationPolicyService.addToInMemoryCollection(authPolicy: rule, conditionValues: conditionValues)
+    let conditions = try rule.$conditions.query(on: app.db).all().wait()
+    try app.abacAuthorizationPolicyService.addToInMemoryCollection(authPolicy: rule, conditionValues: conditions)
 }
 ```
 

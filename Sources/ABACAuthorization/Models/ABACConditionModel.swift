@@ -92,10 +92,25 @@ extension ABACConditionModel {
                                  lhs: lhs,
                                  rhsType: rhsType,
                                  rhs: rhs,
-                                 authorizationPolicyID: authorizationPolicyId)
+                                 authorizationPolicyId: authorizationPolicyId)
         } else {
             return nil
         }
+    }
+}
+
+
+extension ABACCondition {
+    public func convertToABACConditionModel() -> ABACConditionModel {
+        return ABACConditionModel(id: id,
+                                  key: key,
+                                  type: type,
+                                  operation: operation,
+                                  lhsType: lhsType,
+                                  lhs: lhs,
+                                  rhsType: rhsType,
+                                  rhs: rhs,
+                                  authorizationPolicyId: authorizationPolicyId)
     }
 }
 

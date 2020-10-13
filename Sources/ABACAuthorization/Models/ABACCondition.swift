@@ -11,7 +11,7 @@ public struct ABACCondition: Codable {
     public var lhs: String
     public var rhsType: ABACConditionModel.ConditionType
     public var rhs: String
-    public var authorizationPolicyID: UUID
+    public var authorizationPolicyId: UUID
     // optional extra fields
     public let _csrfToken: String?
     
@@ -23,7 +23,7 @@ public struct ABACCondition: Codable {
                   lhs: String,
                   rhsType: ABACConditionModel.ConditionType,
                   rhs: String,
-                  authorizationPolicyID: UUID,
+                  authorizationPolicyId: UUID,
                   _csrfToken: String? = nil) {
         self.id = id
         self.key = key
@@ -33,7 +33,7 @@ public struct ABACCondition: Codable {
         self.lhs = lhs
         self.rhsType = rhsType
         self.rhs = rhs
-        self.authorizationPolicyID = authorizationPolicyID
+        self.authorizationPolicyId = authorizationPolicyId
         // optional extra fields
         self._csrfToken = _csrfToken
     }
