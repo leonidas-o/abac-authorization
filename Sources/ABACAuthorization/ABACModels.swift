@@ -25,9 +25,6 @@ public protocol ABACAccessData: Codable {
 public protocol ABACAPIResourceable {
     var abacApiEntry: String { get }
     var abacProtectedResources: [String] { get }
-    var abacAuthPoliciesSubDir: String { get }
-    var abacBulkSubDir: String { get }
-    var abacConditionsSubDir: String { get }
 }
 
 
