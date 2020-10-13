@@ -1,8 +1,7 @@
-import ABACAuthorization
 import NIO
 
 
-protocol ABACAuthorizationPersistenceRepo {
+public protocol ABACAuthorizationPersistenceRepo {
     // ABACAuthorizationPolicies
     func save(_ policy: ABACAuthorizationPolicyModel) -> EventLoopFuture<Void>
     func saveBulk(_ policies: [ABACAuthorizationPolicyModel]) -> EventLoopFuture<Void>

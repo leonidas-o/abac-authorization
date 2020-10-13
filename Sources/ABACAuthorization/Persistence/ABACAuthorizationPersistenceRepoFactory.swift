@@ -28,7 +28,7 @@ extension Application {
 
 
 extension Request {
-    var abacAuthorizationRepo: ABACAuthorizationPersistenceRepo {
+    public var abacAuthorizationRepo: ABACAuthorizationPersistenceRepo {
         self.application.abacAuthorizationRepoFactory.make!(self)
     }
 }
