@@ -5,7 +5,11 @@ import FluentPostgresDriver
 
 public struct ABACAuthorizationPostgreSQLRepo: ABACAuthorizationPersistenceRepo {
     
-    public let db: Database
+    let db: Database
+    
+    public init(db: Database) {
+        self.db = db
+    }
     
     
     
