@@ -15,7 +15,7 @@ extension Application {
         typealias Value = ABACAuthorizationPersistenceRepoFactory
     }
 
-    var abacAuthorizationRepoFactory: ABACAuthorizationPersistenceRepoFactory {
+    public var abacAuthorizationRepoFactory: ABACAuthorizationPersistenceRepoFactory {
         get {
             self.storage[ABACAuthorizationPersistenceRepoKey.self] ?? .init()
         }
