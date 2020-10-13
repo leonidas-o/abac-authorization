@@ -20,47 +20,49 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         
-        guard let accessTokenString = request.headers.bearerAuthorization?.token else {
-            return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
-        }
-        //let accessToken = cache.get(key: accessTokenString, as: AD.self).unwrap(or: Abort(.unauthorized))
-        let accessToken = cache.get(key: accessTokenString, as: AD.self)
-        
-        // Vapor 3
-//        let pathComponents = request.http.url.pathComponents
-        // Vapor 4 workaround
-        let pathComponents = request.url.path.components(separatedBy: "/")
-        
-        // TODO: refactor actions constant to an array needed for
-        // api bulk requests, where .create and .update is performed
-        // right now, user can update a AuthorizationPolicy with
-        // only a 'create' policy over a bulk create route
-        let action: ABACAPIAction
-        switch request.method.string {
-        case "GET":
-            action = .read
-        case "POST":
-            action = .create
-        case "PUT":
-            action = .update
-        case "PATCH":
-            action = .update
-        case "DELETE":
-            action = .delete
-        default:
-            return request.eventLoop.makeFailedFuture(Abort(.forbidden))
-        }
-        
         // TODO: Examine: What if api versioning introduced or nested resources, etc.?
         //        guard let resource = pathComponents.item(after: apiResources.apiEntry) else {
         //            throw Abort(.internalServerError)
         //        }
-        let resource = getRequestedResource(fromPathComponents: pathComponents)
+        let pathComponents = request.url.path.pathComponents
+        let resource = self.getRequestedAndProtectedResource(fromPathComponents: pathComponents)
+        guard !resource.isEmpty else {
+            // permit access as requested resource is unprotected
+            return next.respond(to: request)
+        }
         
-        return accessToken.flatMap { accessToken -> EventLoopFuture<Response> in
-            guard let accessToken = accessToken else {
-                return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        guard let accessTokenString = request.headers.bearerAuthorization?.token else {
+            return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        }
+        return cache.get(key: accessTokenString, as: AD.self).unwrap(or: Abort(.unauthorized)).flatMap { accessToken in
+               
+            // TODO: refactor actions constant to an array needed for
+            // api bulk requests, where .create and .update is performed.
+            // right now, user can update a AuthorizationPolicy with
+            // only a 'create' policy over a bulk create route
+            let action: ABACAPIAction
+            switch request.method.string {
+            case "GET":
+                action = .read
+            case "POST":
+                action = .create
+            case "PUT":
+                action = .update
+            case "PATCH":
+                action = .update
+            case "DELETE":
+                action = .delete
+            default:
+                return request.eventLoop.makeFailedFuture(Abort(.forbidden))
             }
+            
+            
+//        return accessToken.flatMap { accessToken -> EventLoopFuture<Response> in
+//            guard let accessToken = accessToken else {
+//                return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
+//            }
+            
+            
             var pdpRequests: [PDPRequest] = []
             for role in accessToken.userData.roles {
                 let pdpRequest = PDPRequest(role: role.name,
@@ -90,11 +92,11 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     }
     
     
-    private func getRequestedResource(fromPathComponents pathComponents: [String]) -> String {
+    private func getRequestedAndProtectedResource(fromPathComponents pathComponents: [PathComponent]) -> String {
         var lastProtectedResource: String = ""
         for path in pathComponents.reversed() {
-            if apiResource.protectedResources.contains(path) {
-                lastProtectedResource = path
+            if apiResource.abacProtectedResources.contains(path.description) {
+                lastProtectedResource = path.description
                 break
             }
         }

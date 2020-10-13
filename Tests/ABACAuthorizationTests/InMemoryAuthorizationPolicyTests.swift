@@ -36,7 +36,7 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     
     func testAddRuleWithoutConditionValues() {
         // Given
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         
         // When
         let rulesCountBefore = sut.authPolicyCollection[Constant.adminRoleName]?.count
@@ -53,9 +53,10 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
         sut.removeAllFromInMemoryCollection()
     }
     
+    
     func testAddRuleWithOneConditionValue() {
         // Given
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         
         // When
@@ -82,10 +83,9 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     }
     
     
-    
     func testRemoveRule() {
         // Given
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
@@ -110,9 +110,10 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
         sut.removeAllFromInMemoryCollection()
     }
     
+    
     func testRemoveConditionValueInRule() {
         // Given
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
@@ -140,10 +141,11 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
         XCTAssertEqual(conditionCountAfter, 0)
         sut.removeAllFromInMemoryCollection()
     }
+    
 
     func testRemoveAllRules() {
         // Given
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
@@ -166,14 +168,4 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
         XCTAssertEqual(rulesCountBefore, 3)
         XCTAssertEqual(rulesCountAfter, nil)
     }
-    
-    
-
-//    static var allTests = [
-//        ("testAddRuleWithoutConditionValues", testAddRuleWithoutConditionValues),
-//        ("testAddRuleWithOneConditionValue" ,testAddRuleWithOneConditionValue),
-//        ("testRemoveRule", testRemoveRule),
-//        ("testRemoveConditionValueInRule", testRemoveConditionValueInRule),
-//        ("testRemoveAllRules", testRemoveAllRules)
-//    ]
 }

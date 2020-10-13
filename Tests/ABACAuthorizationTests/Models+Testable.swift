@@ -1,22 +1,23 @@
 @testable import ABACAuthorization
 import Foundation
 
+
 extension ABACAuthorizationPolicyModel {
-    static func createRules(for roleName: String, allRulesPermitsAccess permits: Bool) -> [ABACAuthorizationPolicyModel] {
+    static func createRules(for roleName: String, rulesPermitsAccess permits: Bool) -> [ABACAuthorizationPolicyModel] {
         
-        let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)authorization-policies"
+        let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)\(ABACMiddlewareTests.APIResource.Resource.abacAuthorizationPolicy.rawValue)"
         let readAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionOnResourceKey: readAuthPolicyActionOnResource,
             actionOnResourceValue: permits)
         
-        let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)authorization-policies"
+        let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)\(ABACMiddlewareTests.APIResource.Resource.abacAuthorizationPolicy.rawValue)"
         let writeAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionOnResourceKey: createAuthPolicyActionOnResource,
             actionOnResourceValue: permits)
         
-        let readRoleActionOnResource = "\(ABACAPIAction.read)roles"
+        let readRoleActionOnResource = "\(ABACAPIAction.read)\(ABACMiddlewareTests.APIResource.Resource.roles.rawValue)"
         let readRole = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionOnResourceKey: readRoleActionOnResource,
@@ -26,6 +27,7 @@ extension ABACAuthorizationPolicyModel {
     }
 }
 
+
 extension ABACConditionModel {
     static func createConditionValues(dummyRef: String, dummyVal: String) -> [ABACConditionModel] {
         let dummyId = UUID()
@@ -33,5 +35,4 @@ extension ABACConditionModel {
         return [conditionValue]
     
     }
-    
 }

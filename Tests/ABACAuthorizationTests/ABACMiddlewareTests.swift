@@ -11,18 +11,28 @@ final class ABACMiddlewareTests: XCTestCase {
     }
     
     public struct APIResource: ABACAPIResourceable {
-        public var apiEntry: String = "api"
-        public var protectedResources: [String] = Resource.allCases.map { $0.rawValue }
+        
+        public var abacApiEntry: String = "api"
+        public var abacProtectedResources: [String] = [
+            "abac-authorization-policies",
+            "roles",
+            "abac-conditions"
+        ]
+        public var abacAuthPoliciesSubDir: String = Resource.abacAuthorizationPolicy.rawValue
+        public var abacBulkSubDir: String = Resource.bulk.rawValue
+        public var abacConditionsSubDir: String = Resource.abacConditions.rawValue
 
+        
         public enum Resource: String, CaseIterable {
             case authenticate = "authenticate"
             case refresh = "refresh"
-            case authorizationPolicy = "authorization-policies"
+            case abacAuthorizationPolicy = "abac-authorization-policies"
             case activityTags = "activity-tags"
             case users = "users"
             case myUser = "my-user"
             case roles = "roles"
-            case conditionValueDB = "condition-values"
+            case abacConditions = "abac-conditions"
+            case bulk = "bulk"
         }
     }
 
@@ -96,7 +106,7 @@ final class ABACMiddlewareTests: XCTestCase {
     /// def: Entry defined, entry can be Resource, Token, Rule, Condition, ...
     /// undef: Entry is undefined, not existing
     /// isAllowed/ isDisallowed: Outcome of the test
-    func testGetDefResourceWithUndefTokenIsDisallowed() {
+    func testGetProtectedResourceWithMissingTokenIsDisallowed() {
         /// If the token is undefined, it doesn't matter if there are any rules
         /// or not. Any request has to have a valid token.
         
@@ -106,13 +116,13 @@ final class ABACMiddlewareTests: XCTestCase {
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.apiEntry)", "\(APIResource.Resource.authorizationPolicy.rawValue)") { req in
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicy.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
             try! authPolicyService.addToInMemoryCollection(
                 authPolicy: rule,
@@ -122,7 +132,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.missingToken
         do {
-            try app.test(.GET, "\(apiResource.apiEntry)/authorization-policies", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .unauthorized)
             })
         } catch {
@@ -133,7 +143,7 @@ final class ABACMiddlewareTests: XCTestCase {
 
     
     
-    func testGetUndefResourceWithDefTokenWithUndefRuleWithUndefConditionIsDisallowed() {
+    func testGetUnprotectedResourceWithExistingTokenWithDefNotMatchingPolicyWithUndefConditionIsAllowed() {
         /// No rules exist for that resource
         
         // Given
@@ -142,18 +152,18 @@ final class ABACMiddlewareTests: XCTestCase {
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.apiEntry)", "\(APIResource.Resource.authorizationPolicy.rawValue)") { req in
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicy.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         // Route in ABAC Resources undefined/ not proteced, but exists in vapor
         // and route uses ABAC Middleware
-        app.routes.grouped(sut).get("\(apiResource.apiEntry)", "any-undefined-resource") { req in
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "any-unprotected-resource") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
             try! authPolicyService.addToInMemoryCollection(
                 authPolicy: rule,
@@ -163,41 +173,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.apiEntry)/any-undefined-resource", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
-                XCTAssertEqual(res.status, .forbidden)
-            })
-        } catch {
-            XCTAssertTrue(false, "\(#function): \(error)")
-        }
-        authPolicyService.removeAllFromInMemoryCollection()
-    }
-    
-    
-    
-    func testGetDefResourceWithDefTokenWithWithDefRuleWithUndefConditionIsAllowed() {
-        // Given
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
-        let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
-        }
-        
-        // When
-        let authPolicyService = ABACAuthorizationPolicyService.shared
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
-        for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
-        }
-        
-        // Then
-        let bearer = Constant.existingToken
-        do {
-            try app.test(.GET, "\(apiResource.apiEntry)/authorization-policies", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/any-unprotected-resource", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .ok)
             })
         } catch {
@@ -205,20 +181,23 @@ final class ABACMiddlewareTests: XCTestCase {
         }
         authPolicyService.removeAllFromInMemoryCollection()
     }
-    func testGetDefResourceWithDefTokenWithWithDefBlockingRuleWithUndefConditionIsDisallowed() {
+    
+    
+    
+    func testGetProtectedResourceWithDefTokenWithDefPolicyWithUndefConditionIsAllowed() {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: false)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
             try! authPolicyService.addToInMemoryCollection(
                 authPolicy: rule,
@@ -228,7 +207,38 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.apiEntry)/authorization-policies", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+                XCTAssertEqual(res.status, .ok)
+            })
+        } catch {
+            XCTAssertTrue(false, "\(#function): \(error)")
+        }
+        authPolicyService.removeAllFromInMemoryCollection()
+    }
+    func testGetProtectedResourceWithDefTokenWithWithDefBlockingPolicyWithUndefConditionIsDisallowed() {
+        // Given
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
+        let apiResource = APIResource()
+        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
+            return req.eventLoop.future(HTTPStatus.ok)
+        }
+        
+        // When
+        let authPolicyService = ABACAuthorizationPolicyService.shared
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: false)
+        for (_, rule) in rules.enumerated() {
+            try! authPolicyService.addToInMemoryCollection(
+                authPolicy: rule,
+                conditionValues: [])
+        }
+        
+        // Then
+        let bearer = Constant.existingToken
+        do {
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {
@@ -239,20 +249,20 @@ final class ABACMiddlewareTests: XCTestCase {
     
     
     
-    func testGetDefResourceWithDefTokenWithDefRuleWithDefConditionIsAllowed() {
+    func testGetProtecedResourceWithDefTokenWithDefPolicyWithDefConditionIsAllowed() {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
@@ -269,7 +279,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.apiEntry)/authorization-policies", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .ok)
             })
         } catch {
@@ -277,20 +287,22 @@ final class ABACMiddlewareTests: XCTestCase {
         }
         authPolicyService.removeAllFromInMemoryCollection()
     }
-    func testGetDefResourceWithDefTokenWithDefBlockingRuleWithDefConditionIsAllowed() {
+    func testGetProtecedResourceWithDefTokenWithDefBlockingPolicyWithDefConditionIsDisallowed() {
+        // As the policy is already blocking the request, the conditions have no effect
+        
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: false)
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: false)
         let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
@@ -307,7 +319,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.apiEntry)/authorization-policies", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {
@@ -318,26 +330,27 @@ final class ABACMiddlewareTests: XCTestCase {
     
     
     
-    func testGetDefResourceWithDefTokenWithUndefRuleWithUndefConditionIsDisallowed() {
-        // Even though we've defined one condition, the request has to be disallowed.
-        // The here defined condition is part of the rule, only if the whole rule matches the request is granted.
+    func testGetProtectedResourceWithDefTokenWithDefPolicyWithDefNotMatchingConditionIsDisallowed() {
+        // Even though we've defined the default rules, witch permit access option and a condition, the request has to be disallowed.
+        // The here defined condition is part of the rule, only if the whole rule (policy+condition) matches the request is granted.
         // It would allow the request if 'role.0.name' would be 'admin'
-        // But as the condition says, the first role name has to be coach,
+        // But as the condition says, the first role name has to be author,
         // the request will be denied as there is no existing rule which permits it.
         
+        // Given
         let app = Application(.testing)
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.apiEntry)", "authorization-policies") { req in
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
-        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, allRulesPermitsAccess: true)
-        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "coach")
+        let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
+        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "author")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
                 try! authPolicyService.addToInMemoryCollection(
@@ -353,7 +366,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.apiEntry)/authorization-policies", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {
@@ -361,5 +374,4 @@ final class ABACMiddlewareTests: XCTestCase {
         }
         authPolicyService.removeAllFromInMemoryCollection()
     }
-
 }
