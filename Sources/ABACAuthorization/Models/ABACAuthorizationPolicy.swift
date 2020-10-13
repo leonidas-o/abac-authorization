@@ -1,4 +1,5 @@
-import Foundation
+import Vapor
+
 
 /// Data Transfer Object - DTO
 public struct ABACAuthorizationPolicy: Codable {
@@ -29,3 +30,4 @@ public struct ABACAuthorizationPolicy: Codable {
 }
 
 extension ABACAuthorizationPolicy: ABACAuthorizationPolicyDefinition {}
+extension ABACAuthorizationPolicy: Content {}

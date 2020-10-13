@@ -1,4 +1,4 @@
-import Foundation
+import Vapor
 
 /// Data Transfer Object - DTO
 public struct ABACCondition: Codable {
@@ -39,4 +39,4 @@ public struct ABACCondition: Codable {
     }
 }
 
-
+extension ABACCondition: Content {}
