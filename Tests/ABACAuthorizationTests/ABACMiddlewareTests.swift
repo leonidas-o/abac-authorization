@@ -10,7 +10,7 @@ final class ABACMiddlewareTests: XCTestCase {
         static let adminRoleName = "admin"
     }
     
-    public struct APIResource: ABACAPIResourceable {
+    public struct APIResource {
         
         public var abacApiEntry: String = "api"
         public var abacProtectedResources: [String] = [
@@ -18,15 +18,12 @@ final class ABACMiddlewareTests: XCTestCase {
             "roles",
             "abac-conditions"
         ]
-        public var abacAuthPoliciesSubDir: String = Resource.abacAuthorizationPolicy.rawValue
-        public var abacBulkSubDir: String = Resource.bulk.rawValue
-        public var abacConditionsSubDir: String = Resource.abacConditions.rawValue
 
         
         public enum Resource: String, CaseIterable {
             case authenticate = "authenticate"
             case refresh = "refresh"
-            case abacAuthorizationPolicy = "abac-authorization-policies"
+            case abacAuthorizationPolicies = "abac-authorization-policies"
             case activityTags = "activity-tags"
             case users = "users"
             case myUser = "my-user"
@@ -115,8 +112,8 @@ final class ABACMiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicy.rawValue)") { req in
+        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
@@ -132,7 +129,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.missingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .unauthorized)
             })
         } catch {
@@ -151,8 +148,8 @@ final class ABACMiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicy.rawValue)") { req in
+        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         // Route in ABAC Resources undefined/ not proteced, but exists in vapor
@@ -190,8 +187,8 @@ final class ABACMiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
+        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
@@ -207,7 +204,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .ok)
             })
         } catch {
@@ -221,8 +218,8 @@ final class ABACMiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
+        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
@@ -238,7 +235,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {
@@ -255,8 +252,8 @@ final class ABACMiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
+        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
@@ -279,7 +276,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .ok)
             })
         } catch {
@@ -295,8 +292,8 @@ final class ABACMiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
+        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
@@ -319,7 +316,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {
@@ -342,8 +339,8 @@ final class ABACMiddlewareTests: XCTestCase {
         defer { app.shutdown() }
         let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, apiResource: apiResource)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(apiResource.abacAuthPoliciesSubDir)") { req in
+        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
         
@@ -366,7 +363,7 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(apiResource.abacAuthPoliciesSubDir)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {

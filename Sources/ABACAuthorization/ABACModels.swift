@@ -20,11 +20,3 @@ public protocol ABACAccessData: Codable {
     associatedtype UserDataType: ABACUserData
     var userData: UserDataType { get set }
 }
-
-
-public protocol ABACAPIResourceable {
-    var abacApiEntry: String { get }
-    var abacProtectedResources: [String] { get }
-}
-
-

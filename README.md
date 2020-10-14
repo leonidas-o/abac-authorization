@@ -31,8 +31,7 @@ In your `package.swift` add the abac-authorization package
     - Your *AccessData* model conforming to `ABACAccessData`
 - Setup your cache store/repository:
     - *YourCacheStore* conforming to `ABACCacheStore`
-- Setup a resources collection struct:
-    - *APIResource* conforming to `ABACAPIResourceable`
+
 
 
 #### Details
@@ -94,20 +93,6 @@ extension APIResource {
 }
 ```
 
-Example `APIResource` conforming to `ABACAPIResourceable`
-```swift
-extension APIResource: ABACAPIResourceable {
-    
-    public var abacApiEntry: String {
-        return APIResource._apiEntry
-    }
-    
-    public var abacProtectedResources: [String] {
-        return APIResource._allProtected
-    }
-}
-
-```
 
 
 

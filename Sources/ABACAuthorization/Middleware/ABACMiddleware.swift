@@ -6,13 +6,13 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     private let authorizationPolicyService: ABACAuthorizationPolicyService
     private let cache: ABACCacheRepo
-    private let apiResource: ABACAPIResourceable
+    private let protectedResources: [String]
     
     
-    public init(_ type: AD.Type = AD.self, cache: ABACCacheRepo, apiResource: ABACAPIResourceable) {
+    public init(_ type: AD.Type = AD.self, cache: ABACCacheRepo, protectedResources: [String]) {
         self.authorizationPolicyService = ABACAuthorizationPolicyService.shared
         self.cache = cache
-        self.apiResource = apiResource
+        self.protectedResources = protectedResources
     }
     
     
@@ -95,7 +95,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     private func getRequestedAndProtectedResource(fromPathComponents pathComponents: [PathComponent]) -> String {
         var lastProtectedResource: String = ""
         for path in pathComponents.reversed() {
-            if apiResource.abacProtectedResources.contains(path.description) {
+            if protectedResources.contains(path.description) {
                 lastProtectedResource = path.description
                 break
             }
