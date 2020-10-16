@@ -32,7 +32,7 @@ public struct ABACAuthorizationPostgreSQLRepo: ABACAuthorizationPersistenceRepo 
     }
     
     
-    public func _get(_ policyId: ABACAuthorizationPolicyModel.IDValue) -> EventLoopFuture<ABACAuthorizationPolicyModel?> {
+    public func get(_ policyId: ABACAuthorizationPolicyModel.IDValue) -> EventLoopFuture<ABACAuthorizationPolicyModel?> {
         return ABACAuthorizationPolicyModel.find(policyId, on: db)
     }
     
@@ -86,7 +86,7 @@ public struct ABACAuthorizationPostgreSQLRepo: ABACAuthorizationPersistenceRepo 
     }
     
     
-    public func _getCondition(_ conditionId: ABACConditionModel.IDValue) -> EventLoopFuture<ABACConditionModel?> {
+    public func getCondition(_ conditionId: ABACConditionModel.IDValue) -> EventLoopFuture<ABACConditionModel?> {
         return ABACConditionModel.find(conditionId, on: db)
     }
     
