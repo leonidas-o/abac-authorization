@@ -8,7 +8,7 @@ public struct ABACAuthorizationPersistenceRepoFactory {
     }
     
     var makeForApp: ((Application) -> ABACAuthorizationPersistenceRepo)?
-    mutating func useForApp(_ make: @escaping ((Application) -> ABACAuthorizationPersistenceRepo)) {
+    public mutating func useForApp(_ make: @escaping ((Application) -> ABACAuthorizationPersistenceRepo)) {
         self.makeForApp = make
     }
 }
@@ -33,7 +33,7 @@ extension Application {
 
 
 extension Application {
-    var abacAuthorizationRepo: ABACAuthorizationPersistenceRepo {
+    public var abacAuthorizationRepo: ABACAuthorizationPersistenceRepo {
         self.abacAuthorizationRepoFactory.makeForApp!(self)
     }
 }
