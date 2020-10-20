@@ -62,34 +62,34 @@ struct APIResource {
     
     static let _apiEntry: String = "api"
     
+    
     static let _all: [String] = Resource.allCases.map { $0.rawValue }.sorted { $0 < $1 }
     
-    // contains all resources
+    
+    static let _allProtected: [String] = [
+        APIResource.Resource.abacAuthorizationPolicies,
+        APIResource.Resource.abacConditions,
+        APIResource.Resource.todos,
+        APIResource.Resource.users,
+        APIResource.Resource.myUser,
+        APIResource.Resource.roles,
+    ].map { $0.rawValue }.sorted { $0 < $1 }
+
+    
     enum Resource: String, CaseIterable {
-        case auth = "auth"
         case login = "login"
-        case logout = "logout" 
-        case accessData = "access-data"
-        case registration = "registration"
-        case authorizationPolicies = "authorization-policies"
+        // abac
+        case abacAuthorizationPolicies = "abac-auth-policies"
+        case abacAuthorizationPoliciesService = "abac-auth-policies-service"
+        case abacConditions = "abac-conditions"
+        // others
+        case todos = "todos"
         case users = "users"
         case myUser = "my-user"
         case roles = "roles"
-        case conditions = "conditions"
+        case bulk = "bulk"
     }
     
-    init() {}
-}
-
-// contains all protected resources where
-// ABACAuthorization is used
-extension APIResource {
-    public static let _allProtected: [String] = [
-        APIResource.Resource.authorizationPolicies,
-        APIResource.Resource.auth,
-        APIResource.Resource.conditions,
-        APIResource.Resource.users
-    ].map { $0.rawValue }.sorted { $0 < $1 }
 }
 ```
 
@@ -103,10 +103,8 @@ extension APIResource {
 struct AdminUser: Migration {
     
     enum Constant {
-        static let isEnabled = true
-        static let firstName = "Admin"
-        static let lastName = "Admin"
-        static let email = "webmaster@nuvariant.com"
+        static let name = "Admin"
+        static let email = "webmaster@foo.com"
         static let passwordLength = 16
     }
     
@@ -120,9 +118,7 @@ struct AdminUser: Migration {
             fatalError("Failed to create admin user")
         }
         
-        let user = UserModel(isEnabled: Constant.isEnabled,
-                             firstName: Constant.firstName,
-                             lastName: Constant.lastName,
+        let user = UserModel(name: Constant.name,
                              email: Constant.email,
                              password: hashedPassword)
         return user.save(on: database)
