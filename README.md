@@ -21,7 +21,7 @@ In your `package.swift` add the abac-authorization package
     ...
 ```
 
-### Setup and conform Models
+### Models
 
 #### Overview
 - Setup fluent models:
@@ -29,8 +29,8 @@ In your `package.swift` add the abac-authorization package
     - Your *Role* model conforming to `ABACRole`
     - Your *UserData* model conforming to `ABACUserData`
     - Your *AccessData* model conforming to `ABACAccessData`
-- Setup your cache store/repository:
-    - *YourCacheStore* conforming to `ABACCacheStore`
+- Setup your cache repository:
+    - *YourCacheRepo* conforming to `ABACCacheRepo`
 
 
 
@@ -48,14 +48,16 @@ Your **Role** Model
 Your **UserData** Model
 1. Needs a `roles` property - Array of roles (model should conform to Codable)
 2. Conform to `ABACUserData`
-// TODO
 
-Your **AccessData** model
-1.
+Your **AccessData** Model
+1. Needs a `userData` property
+2. Conform to `ABACAccessData`
+
+Your **CacheRepo** 
+Either conform your `CacheRepo` protocol to `ABACCacheRepo` or your real repo and implement the requirements. 
 
 
-
-**APIResource**
+An example of a **APIResource**
 A simple struct holding your resources, could look like:
 ```swift
 struct APIResource {
@@ -97,7 +99,7 @@ struct APIResource {
 
 
 
-### Define 
+### DB Seeding 
 #### Admin user
 ```swift
 struct AdminUser: Migration {
@@ -204,8 +206,9 @@ struct AdminAuthorizationPolicyRestricted: Migration {
 }
 ```
 
+### Final Steps
 
-In `configure.swift` 
+Open `configure.swift` 
 
 Import the package (`import ABACAuthorization`) set the integrated PostgreSQL repository
 ```swift
@@ -229,8 +232,7 @@ if (app.environment != .testing) {
 ```
 
 
-### Load persisted rules
-In `boot.swift` load saved policies
+To Load the persisted rules on startup go to `boot.swift`
 ```swift
 
 // MARK: Authorization
