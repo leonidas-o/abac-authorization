@@ -2,8 +2,8 @@ import Vapor
 import Foundation
 
 protocol AuthorizationValuable {
-    var actionOnResourceValue: Bool { get set }
-    var conditionValue: ConditionValuable? { get set}
+    var actionValue: Bool { get set }
+    var condition: ConditionValuable? { get set}
 }
 
 protocol ConditionValuable {
@@ -58,12 +58,12 @@ extension Request {
 // MARK: - Structure
 
 extension ABACAuthorizationPolicyService {
-    struct AuthorizationValues: AuthorizationValuable {
-        var actionOnResourceValue: Bool
-        var conditionValue: ConditionValuable?
+    private struct Authorization: AuthorizationValuable {
+        var actionValue: Bool
+        var condition: ConditionValuable?
     }
     
-    struct ConditionValue<LhsT: Comparable, RhsT: Comparable, OpsT: Comparable>: ConditionValuable {
+    struct Condition<LhsT: Comparable, RhsT: Comparable, OpsT: Comparable>: ConditionValuable {
         var type: ABACConditionModel.ConditionValueType
         var lhsType: ABACConditionModel.ConditionType
         var lhs: LhsT
@@ -80,37 +80,37 @@ extension ABACAuthorizationPolicyService {
 // MARK: - Helper Methods
 
 extension ABACAuthorizationPolicyService {
-    public func addToInMemoryCollection(authPolicy: ABACAuthorizationPolicyModel, conditionValues: [ABACConditionModel]) throws {
-        if conditionValues.isEmpty {
-            let authValues = try prepareInMemoryAuthorizationValues(authPolicy, conditionValue: nil)
-            add(authPolicy: authPolicy, conditionKey: ABACConditionModel.Constant.defaultConditionKey, authValues: authValues)
+    public func addToInMemoryCollection(policy: ABACAuthorizationPolicyModel, conditions: [ABACConditionModel]) throws {
+        if conditions.isEmpty {
+            let authValues = try prepareInMemoryAuthorizationValues(policy, condition: nil)
+            add(policy: policy, conditionKey: ABACConditionModel.Constant.defaultConditionKey, authValues: authValues)
         } else {
-            for conditionValue in conditionValues {
-                let authValues = try prepareInMemoryAuthorizationValues(authPolicy, conditionValue: conditionValue)
-                add(authPolicy: authPolicy, conditionKey: conditionValue.key, authValues: authValues)
+            for condition in conditions {
+                let authValues = try prepareInMemoryAuthorizationValues(policy, condition: condition)
+                add(policy: policy, conditionKey: condition.key, authValues: authValues)
             }
         }
     }
-    private func add(authPolicy: ABACAuthorizationPolicyModel, conditionKey: String, authValues: AuthorizationValues) {
-        if self.authPolicyCollection[authPolicy.roleName] == nil {
-            self.authPolicyCollection[authPolicy.roleName] = [authPolicy.actionOnResourceKey:[conditionKey:authValues]]
+    private func add(policy: ABACAuthorizationPolicyModel, conditionKey: String, authValues: Authorization) {
+        if self.authPolicyCollection[policy.roleName] == nil {
+            self.authPolicyCollection[policy.roleName] = [policy.actionKey:[conditionKey:authValues]]
         }
-        if self.authPolicyCollection[authPolicy.roleName]![authPolicy.actionOnResourceKey] == nil {
-            self.authPolicyCollection[authPolicy.roleName]![authPolicy.actionOnResourceKey] = [conditionKey:authValues]
+        if self.authPolicyCollection[policy.roleName]![policy.actionKey] == nil {
+            self.authPolicyCollection[policy.roleName]![policy.actionKey] = [conditionKey:authValues]
         }
-        self.authPolicyCollection[authPolicy.roleName]![authPolicy.actionOnResourceKey]![conditionKey] = authValues
+        self.authPolicyCollection[policy.roleName]![policy.actionKey]![conditionKey] = authValues
     }
 }
 
 
 
 extension ABACAuthorizationPolicyService {
-    func removeFromInMemoryCollection(authPolicy: ABACAuthorizationPolicyModel) {
-        self.authPolicyCollection[authPolicy.roleName]?.removeValue(forKey: authPolicy.actionOnResourceKey)
+    func removeFromInMemoryCollection(policy: ABACAuthorizationPolicyModel) {
+        self.authPolicyCollection[policy.roleName]?.removeValue(forKey: policy.actionKey)
     }
     
-    func removeFromInMemoryCollection(conditionValue: ABACConditionModel, in authPolicy: ABACAuthorizationPolicyModel) {
-        self.authPolicyCollection[authPolicy.roleName]?[authPolicy.actionOnResourceKey]?.removeValue(forKey: conditionValue.key)
+    func removeFromInMemoryCollection(condition: ABACConditionModel, in policy: ABACAuthorizationPolicyModel) {
+        self.authPolicyCollection[policy.roleName]?[policy.actionKey]?.removeValue(forKey: condition.key)
     }
     
     func removeAllFromInMemoryCollection() {
@@ -121,111 +121,111 @@ extension ABACAuthorizationPolicyService {
 
 
 extension ABACAuthorizationPolicyService {
-    private func prepareInMemoryAuthorizationValues(_ authPolicy: ABACAuthorizationPolicyModel, conditionValue: ABACConditionModel?) throws -> AuthorizationValues {
+    private func prepareInMemoryAuthorizationValues(_ policy: ABACAuthorizationPolicyModel, condition: ABACConditionModel?) throws -> Authorization {
         
-        guard let conditionValue = conditionValue else {
-            return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: nil)
+        guard let condition = condition else {
+            return Authorization(actionValue: policy.actionValue, condition: nil)
         }
         
-        switch conditionValue.type {
+        switch condition.type {
         case .string:
-            let conditionOperation = determineConditionOperation(forConditionType: String.self, fromConditionOperation: conditionValue.operation)
+            let conditionOperation = determineConditionOperation(forConditionType: String.self, fromConditionOperation: condition.operation)
             
-            let conditionValue = ConditionValue<String, String, String>(
-                type: conditionValue.type,
-                lhsType: conditionValue.lhsType,
-                lhs: conditionValue.lhs,
-                rhsType: conditionValue.rhsType,
-                rhs: conditionValue.rhs,
+            let condition = Condition<String, String, String>(
+                type: condition.type,
+                lhsType: condition.lhsType,
+                lhs: condition.lhs,
+                rhsType: condition.rhsType,
+                rhs: condition.rhs,
                 operation: conditionOperation)
-            return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+            return Authorization(actionValue: policy.actionValue, condition: condition)
         case .int:
-            let conditionOperation = determineConditionOperation(forConditionType: Int.self, fromConditionOperation: conditionValue.operation)
+            let conditionOperation = determineConditionOperation(forConditionType: Int.self, fromConditionOperation: condition.operation)
 
-            switch (conditionValue.lhsType, conditionValue.rhsType) {
+            switch (condition.lhsType, condition.rhsType) {
             case (.reference, .reference):
-                let conditionValue = ConditionValue<String, String, Int>(
-                    type: conditionValue.type,
-                    lhsType: conditionValue.lhsType,
-                    lhs: conditionValue.lhs,
-                    rhsType: conditionValue.rhsType,
-                    rhs: conditionValue.rhs,
+                let condition = Condition<String, String, Int>(
+                    type: condition.type,
+                    lhsType: condition.lhsType,
+                    lhs: condition.lhs,
+                    rhsType: condition.rhsType,
+                    rhs: condition.rhs,
                     operation: conditionOperation)
-                return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+                return Authorization(actionValue: policy.actionValue, condition: condition)
             case (.reference, .value):
-                guard let rhsInt = Int(conditionValue.rhs) else { throw Abort(.internalServerError) }
-                let conditionValue = ConditionValue<String, Int, Int>(
-                    type: conditionValue.type,
-                    lhsType: conditionValue.lhsType,
-                    lhs: conditionValue.lhs,
-                    rhsType: conditionValue.rhsType,
+                guard let rhsInt = Int(condition.rhs) else { throw Abort(.internalServerError) }
+                let condition = Condition<String, Int, Int>(
+                    type: condition.type,
+                    lhsType: condition.lhsType,
+                    lhs: condition.lhs,
+                    rhsType: condition.rhsType,
                     rhs: rhsInt,
                     operation: conditionOperation)
-                return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+                return Authorization(actionValue: policy.actionValue, condition: condition)
             case (.value, .reference):
-                guard let lhsInt = Int(conditionValue.lhs) else { throw Abort(.internalServerError) }
-                let conditionValue = ConditionValue<Int, String, Int>(
-                    type: conditionValue.type,
-                    lhsType: conditionValue.lhsType,
+                guard let lhsInt = Int(condition.lhs) else { throw Abort(.internalServerError) }
+                let condition = Condition<Int, String, Int>(
+                    type: condition.type,
+                    lhsType: condition.lhsType,
                     lhs: lhsInt,
-                    rhsType: conditionValue.rhsType,
-                    rhs: conditionValue.rhs,
+                    rhsType: condition.rhsType,
+                    rhs: condition.rhs,
                     operation: conditionOperation)
-                return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+                return Authorization(actionValue: policy.actionValue, condition: condition)
             case (.value, .value):
-                guard let lhsInt = Int(conditionValue.lhs), let rhsInt = Int(conditionValue.rhs) else { throw Abort(.internalServerError) }
-                let conditionValue = ConditionValue<Int, Int, Int>(
-                    type: conditionValue.type,
-                    lhsType: conditionValue.lhsType,
+                guard let lhsInt = Int(condition.lhs), let rhsInt = Int(condition.rhs) else { throw Abort(.internalServerError) }
+                let condition = Condition<Int, Int, Int>(
+                    type: condition.type,
+                    lhsType: condition.lhsType,
                     lhs: lhsInt,
-                    rhsType: conditionValue.rhsType,
+                    rhsType: condition.rhsType,
                     rhs: rhsInt,
                     operation: conditionOperation)
-                return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+                return Authorization(actionValue: policy.actionValue, condition: condition)
             }
         case .double:
-            let conditionOperation = determineConditionOperation(forConditionType: Double.self, fromConditionOperation: conditionValue.operation)
+            let conditionOperation = determineConditionOperation(forConditionType: Double.self, fromConditionOperation: condition.operation)
             
-            switch (conditionValue.lhsType, conditionValue.rhsType) {
+            switch (condition.lhsType, condition.rhsType) {
             case (.reference, .reference):
-                let conditionValue = ConditionValue<String, String, Double>(
-                    type: conditionValue.type,
-                    lhsType: conditionValue.lhsType,
-                    lhs: conditionValue.lhs,
-                    rhsType: conditionValue.rhsType,
-                    rhs: conditionValue.rhs,
+                let condition = Condition<String, String, Double>(
+                    type: condition.type,
+                    lhsType: condition.lhsType,
+                    lhs: condition.lhs,
+                    rhsType: condition.rhsType,
+                    rhs: condition.rhs,
                     operation: conditionOperation)
-                return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+                return Authorization(actionValue: policy.actionValue, condition: condition)
             case (.reference, .value):
-                guard let rhsDbl = Double(conditionValue.rhs) else { throw Abort(.internalServerError) }
-                let conditionValue = ConditionValue<String, Double, Double>(
-                    type: conditionValue.type,
-                    lhsType: conditionValue.lhsType,
-                    lhs: conditionValue.lhs,
-                    rhsType: conditionValue.rhsType,
+                guard let rhsDbl = Double(condition.rhs) else { throw Abort(.internalServerError) }
+                let condition = Condition<String, Double, Double>(
+                    type: condition.type,
+                    lhsType: condition.lhsType,
+                    lhs: condition.lhs,
+                    rhsType: condition.rhsType,
                     rhs: rhsDbl,
                     operation: conditionOperation)
-                return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+                return Authorization(actionValue: policy.actionValue, condition: condition)
             case (.value, .reference):
-                guard let lhsDbl = Double(conditionValue.lhs) else { throw Abort(.internalServerError) }
-                let conditionValue = ConditionValue<Double, String, Double>(
-                    type: conditionValue.type,
-                    lhsType: conditionValue.lhsType,
+                guard let lhsDbl = Double(condition.lhs) else { throw Abort(.internalServerError) }
+                let condition = Condition<Double, String, Double>(
+                    type: condition.type,
+                    lhsType: condition.lhsType,
                     lhs: lhsDbl,
-                    rhsType: conditionValue.rhsType,
-                    rhs: conditionValue.rhs,
+                    rhsType: condition.rhsType,
+                    rhs: condition.rhs,
                     operation: conditionOperation)
-                return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+                return Authorization(actionValue: policy.actionValue, condition: condition)
             case (.value, .value):
-                guard let lhsDbl = Double(conditionValue.lhs), let rhsDbl = Double(conditionValue.rhs) else { throw Abort(.internalServerError) }
-                let conditionValue = ConditionValue<Double, Double, Double>(
-                    type: conditionValue.type,
-                    lhsType: conditionValue.lhsType,
+                guard let lhsDbl = Double(condition.lhs), let rhsDbl = Double(condition.rhs) else { throw Abort(.internalServerError) }
+                let condition = Condition<Double, Double, Double>(
+                    type: condition.type,
+                    lhsType: condition.lhsType,
                     lhs: lhsDbl,
-                    rhsType: conditionValue.rhsType,
+                    rhsType: condition.rhsType,
                     rhs: rhsDbl,
                     operation: conditionOperation)
-                return AuthorizationValues(actionOnResourceValue: authPolicy.actionOnResourceValue, conditionValue: conditionValue)
+                return Authorization(actionValue: policy.actionValue, condition: condition)
             }
         }
     }

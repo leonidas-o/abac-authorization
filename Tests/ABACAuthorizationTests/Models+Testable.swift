@@ -8,20 +8,20 @@ extension ABACAuthorizationPolicyModel {
         let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)\(ABACMiddlewareTests.APIResource.Resource.abacAuthorizationPolicies.rawValue)"
         let readAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: roleName,
-            actionOnResourceKey: readAuthPolicyActionOnResource,
-            actionOnResourceValue: permits)
+            actionKey: readAuthPolicyActionOnResource,
+            actionValue: permits)
         
         let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)\(ABACMiddlewareTests.APIResource.Resource.abacAuthorizationPolicies.rawValue)"
         let writeAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: roleName,
-            actionOnResourceKey: createAuthPolicyActionOnResource,
-            actionOnResourceValue: permits)
+            actionKey: createAuthPolicyActionOnResource,
+            actionValue: permits)
         
         let readRoleActionOnResource = "\(ABACAPIAction.read)\(ABACMiddlewareTests.APIResource.Resource.roles.rawValue)"
         let readRole = ABACAuthorizationPolicyModel(
             roleName: roleName,
-            actionOnResourceKey: readRoleActionOnResource,
-            actionOnResourceValue: permits)
+            actionKey: readRoleActionOnResource,
+            actionValue: permits)
         
         return [readAuthPolicy, writeAuthPolicy, readRole]
     }

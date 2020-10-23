@@ -121,9 +121,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+            try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
         }
         
         // Then
@@ -162,9 +160,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+            try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
         }
         
         // Then
@@ -196,9 +192,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+            try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
         }
         
         // Then
@@ -227,9 +221,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: false)
         for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+            try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
         }
         
         // Then
@@ -260,16 +252,12 @@ final class ABACMiddlewareTests: XCTestCase {
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
-        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! authPolicyService.addToInMemoryCollection(
-                    authPolicy: rule,
-                    conditionValues: conditionValues)
+                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! authPolicyService.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         
@@ -300,16 +288,12 @@ final class ABACMiddlewareTests: XCTestCase {
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: false)
-        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! authPolicyService.addToInMemoryCollection(
-                    authPolicy: rule,
-                    conditionValues: conditionValues)
+                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! authPolicyService.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         
@@ -347,16 +331,12 @@ final class ABACMiddlewareTests: XCTestCase {
         // When
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
-        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "author")
+        let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "author")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! authPolicyService.addToInMemoryCollection(
-                    authPolicy: rule,
-                    conditionValues: conditionValues)
+                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! authPolicyService.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         

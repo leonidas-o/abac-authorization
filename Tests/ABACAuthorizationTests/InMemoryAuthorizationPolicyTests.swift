@@ -41,9 +41,7 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
         // When
         let rulesCountBefore = sut.authPolicyCollection[Constant.adminRoleName]?.count
         for (_, rule) in rules.enumerated() {
-            try! sut.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+            try! sut.addToInMemoryCollection(policy: rule, conditions: [])
         }
         let rulesCountAfter = sut.authPolicyCollection[Constant.adminRoleName]!.count
         
@@ -57,23 +55,19 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     func testAddRuleWithOneConditionValue() {
         // Given
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
-        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         
         // When
         let rulesCountBefore = sut.authPolicyCollection[Constant.adminRoleName]?.count
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! sut.addToInMemoryCollection(
-                    authPolicy: rule,
-                    conditionValues: conditionValues)
+                try! sut.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! sut.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+                try! sut.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         let rulesCountAfter = sut.authPolicyCollection[Constant.adminRoleName]!.count
-        let conditionCount = sut.authPolicyCollection[Constant.adminRoleName]![rules[0].actionOnResourceKey]!.count
+        let conditionCount = sut.authPolicyCollection[Constant.adminRoleName]![rules[0].actionKey]!.count
         
         // Then
         XCTAssertEqual(rulesCountBefore, nil)
@@ -86,22 +80,18 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     func testRemoveRule() {
         // Given
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
-        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! sut.addToInMemoryCollection(
-                    authPolicy: rule,
-                    conditionValues: conditionValues)
+                try! sut.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! sut.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+                try! sut.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         
         // When
         let rulesCountBefore = sut.authPolicyCollection[Constant.adminRoleName]?.count
-        sut.removeFromInMemoryCollection(authPolicy: rules[0])
+        sut.removeFromInMemoryCollection(policy: rules[0])
         let rulesCountAfter = sut.authPolicyCollection[Constant.adminRoleName]!.count
         
         // Then
@@ -114,25 +104,21 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     func testRemoveConditionValueInRule() {
         // Given
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
-        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! sut.addToInMemoryCollection(
-                    authPolicy: rule,
-                    conditionValues: conditionValues)
+                try! sut.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! sut.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+                try! sut.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         
         // When
         let rulesCountBefore = sut.authPolicyCollection[Constant.adminRoleName]!.count
-        let conditionCountBefore = sut.authPolicyCollection[Constant.adminRoleName]![rules[0].actionOnResourceKey]!.count
-        sut.removeFromInMemoryCollection(conditionValue: conditionValues[0], in: rules[0])
+        let conditionCountBefore = sut.authPolicyCollection[Constant.adminRoleName]![rules[0].actionKey]!.count
+        sut.removeFromInMemoryCollection(condition: conditions[0], in: rules[0])
         let rulesCountAfter = sut.authPolicyCollection[Constant.adminRoleName]!.count
-        let conditionCountAfter = sut.authPolicyCollection[Constant.adminRoleName]![rules[0].actionOnResourceKey]!.count
+        let conditionCountAfter = sut.authPolicyCollection[Constant.adminRoleName]![rules[0].actionKey]!.count
         
         // Then
         XCTAssertEqual(rulesCountBefore, 3)
@@ -146,16 +132,12 @@ final class InMemoryAuthorizationPolicyTests: XCTestCase {
     func testRemoveAllRules() {
         // Given
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
-        let conditionValues = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
+        let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! sut.addToInMemoryCollection(
-                    authPolicy: rule,
-                    conditionValues: conditionValues)
+                try! sut.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! sut.addToInMemoryCollection(
-                authPolicy: rule,
-                conditionValues: [])
+                try! sut.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         

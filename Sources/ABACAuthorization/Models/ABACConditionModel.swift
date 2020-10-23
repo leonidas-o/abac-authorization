@@ -44,7 +44,7 @@ public final class ABACConditionModel: Model {
     @Field(key: "rhs_type") public var rhsType: ConditionType
     @Field(key: "rhs") public var rhs: String
     
-    @Parent(key: "authorization_policy_id") public var authorizationPolicy: ABACAuthorizationPolicyModel
+    @Parent(key: "auth_policy_id") public var authorizationPolicy: ABACAuthorizationPolicyModel
     
     
     public init() {}
@@ -152,9 +152,9 @@ public struct ABACConditionModelMiddleware: ModelMiddleware {
         // before operation
         return next.update(model, on: db).map {
             // after operation
-            _ = model.$authorizationPolicy.get(on: db).flatMapThrowing { authPolicy in
-                return authPolicy.$conditions.query(on: db).all().flatMapThrowing { conditionValues in
-                    try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: authPolicy, conditionValues: conditionValues)
+            _ = model.$authorizationPolicy.get(on: db).flatMapThrowing { policy in
+                return policy.$conditions.query(on: db).all().flatMapThrowing { conditions in
+                    try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: policy, conditions: conditions)
                 }
             }
         }
@@ -164,9 +164,9 @@ public struct ABACConditionModelMiddleware: ModelMiddleware {
         // before operation
         return next.create(model, on: db).map {
             // after operation
-            _ = model.$authorizationPolicy.get(on: db).flatMapThrowing { authPolicy in
-                return authPolicy.$conditions.query(on: db).all().flatMapThrowing { conditionValues in
-                    try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(authPolicy: authPolicy, conditionValues: conditionValues)
+            _ = model.$authorizationPolicy.get(on: db).flatMapThrowing { policy in
+                return policy.$conditions.query(on: db).all().flatMapThrowing { conditions in
+                    try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: policy, conditions: conditions)
                 }
             }
         }
@@ -176,8 +176,8 @@ public struct ABACConditionModelMiddleware: ModelMiddleware {
         // before operation
         return next.delete(model, force: force, on: db).map {
             // after operation
-            _ = model.$authorizationPolicy.get(on: db).map { authPolicy in
-                ABACAuthorizationPolicyService.shared.removeFromInMemoryCollection(conditionValue: model, in: authPolicy)
+            _ = model.$authorizationPolicy.get(on: db).map { policy in
+                ABACAuthorizationPolicyService.shared.removeFromInMemoryCollection(condition: model, in: policy)
             }
         }
     }

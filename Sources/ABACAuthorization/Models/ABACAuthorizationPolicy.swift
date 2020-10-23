@@ -6,8 +6,8 @@ public struct ABACAuthorizationPolicy: Codable {
     
     public var id: UUID?
     public var roleName: String
-    public var actionOnResourceKey: String
-    public var actionOnResourceValue: Bool
+    public var actionKey: String
+    public var actionValue: Bool
     public var conditions: [ABACCondition]
     // optional extra fields
     public var _csrfToken: String?
@@ -15,14 +15,14 @@ public struct ABACAuthorizationPolicy: Codable {
     
     public init(id: UUID? = nil,
                 roleName: String,
-                actionOnResourceKey: String,
-                actionOnResourceValue: Bool,
+                actionKey: String,
+                actionValue: Bool,
                 conditions: [ABACCondition] = [],
                 _csrfToken: String? = nil) {
         self.id = id
         self.roleName = roleName
-        self.actionOnResourceKey = actionOnResourceKey
-        self.actionOnResourceValue = actionOnResourceValue
+        self.actionKey = actionKey
+        self.actionValue = actionValue
         self.conditions = conditions
         // optional extra fields
         self._csrfToken = _csrfToken

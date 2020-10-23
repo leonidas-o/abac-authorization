@@ -45,8 +45,8 @@ public struct ABACAuthorizationPostgreSQLRepo: ABACAuthorizationPersistenceRepo 
     public func update(_ policy: ABACAuthorizationPolicyModel, updatedPolicy: ABACAuthorizationPolicy) -> EventLoopFuture<Void> {
            
         policy.roleName = updatedPolicy.roleName
-        policy.actionOnResourceKey = updatedPolicy.actionOnResourceKey
-        policy.actionOnResourceValue = updatedPolicy.actionOnResourceValue
+        policy.actionKey = updatedPolicy.actionKey
+        policy.actionValue = updatedPolicy.actionValue
         
         return policy.save(on: db)
     }
@@ -72,7 +72,7 @@ public struct ABACAuthorizationPostgreSQLRepo: ABACAuthorizationPersistenceRepo 
     
     public func delete(actionOnResourceKeys: [String]) -> EventLoopFuture<Void> {
         let authPolicyDeleteResults = actionOnResourceKeys.map { key in
-            return ABACAuthorizationPolicyModel.query(on: db).filter(\.$actionOnResourceKey == key).delete()
+            return ABACAuthorizationPolicyModel.query(on: db).filter(\.$actionKey == key).delete()
         }
         return authPolicyDeleteResults.flatten(on: db.eventLoop)
     }
