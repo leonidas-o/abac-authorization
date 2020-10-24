@@ -132,8 +132,8 @@ public struct ABACConditionModelMigration: Migration {
             .field("lhs", .string, .required)
             .field("rhs_type", .string, .required)
             .field("rhs", .string, .required)
-            .field("authorization_policy_id", .uuid, .required, .references("authorization_policy", "id"))
-            .unique(on: "key", "authorization_policy_id")
+            .field("auth_policy_id", .uuid, .required, .references("abac_auth_policy", "id"))
+            .unique(on: "key", "auth_policy_id")
             .create()
     }
     
