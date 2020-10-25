@@ -148,6 +148,9 @@ public struct ABACConditionModelMigration: Migration {
 // MARK: - ModelMiddleware
 
 public struct ABACConditionModelMiddleware: ModelMiddleware {
+    
+    public init() {}
+    
     public func update(model: ABACConditionModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
         // before operation
         return next.update(model, on: db).map {

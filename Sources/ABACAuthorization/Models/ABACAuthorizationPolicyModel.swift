@@ -98,6 +98,9 @@ public struct ABACAuthorizationPolicyModelMigration: Migration {
 // MARK: - ModelMiddleware
 
 public struct ABACAuthorizationPolicyModelMiddleware: ModelMiddleware {
+    
+    public init() {}
+    
     public func update(model: ABACAuthorizationPolicyModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
         // before operation
         return next.update(model, on: db).map {
