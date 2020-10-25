@@ -217,6 +217,12 @@ app.abacAuthorizationRepoFactory.use { req in
 }
 ```
 
+Hook into the models lifecycle events
+```swift
+app.databases.middleware.use(ABACAuthorizationPolicyModelMiddleware())
+app.databases.middleware.use(ABACConditionModelMiddleware())
+```
+
 Prepare the models
 ```swift
 app.migrations.add(ABACAuthorizationPolicyModelMigration())
@@ -225,10 +231,7 @@ app.migrations.add(ABACConditionModelMigration())
 
 and add your AdminAuthorizationPolicy migration with the minimal set of rules
 ```swift
-// If it is only for testing environment otherwise just use the body
-if (app.environment != .testing) {
-    app.migrations.use(AdminAuthorizationPolicyRestricted(), on: .psql)
-}
+app.migrations.use(AdminAuthorizationPolicyRestricted(), on: .psql)
 ```
 
 
