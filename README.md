@@ -137,12 +137,14 @@ struct AdminUser: Migration {
 It is recommended to create a minimal set of rules to read, create auth policies and read roles to not lock yourself out
 
 ```swift
-struct AdminAuthorizationPolicyRestricted: Migration {
+import ABACAuthorization
+
+struct RestrictedABACAuthorizationPoliciesMigration: Migration {
     
-    let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)\(APIResource.Resource.authorizationPolicies.rawValue)"
-    let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)\(APIResource.Resource.authorizationPolicies.rawValue)"
-    let readRoleActionOnResource = "\(ABACAPIAction.read)\(APIResource.Resource.rolesInternal.rawValue)"
-    let readAuthActionOnResource = "\(ABACAPIAction.read)\(APIResource.Resource.auth.rawValue)"
+    let readAuthPolicies = "\(ABACAPIAction.read)\(APIResource.Resource.abacAuthPolicies.rawValue)"
+    let createAuthPolicies = "\(ABACAPIAction.create)\(APIResource.Resource.abacAuthPolicies.rawValue)"
+    let readRoles = "\(ABACAPIAction.read)\(APIResource.Resource.roles.rawValue)"
+    let readAuths = "\(ABACAPIAction.read)\(APIResource.Resource.auth.rawValue)"
     
     
     func prepare(on database: Database) -> EventLoopFuture<Void> {
@@ -150,23 +152,23 @@ struct AdminAuthorizationPolicyRestricted: Migration {
             
             let readAuthPolicy = ABACAuthorizationPolicyModel(
                 roleName: role.name,
-                actionOnResource: readAuthPolicyActionOnResource,
-                actionOnResourceValue: true)
+                actionKey: readAuthPolicies,
+                actionValue: true)
             
             let writeAuthPolicy = ABACAuthorizationPolicyModel(
                 roleName: role.name,
-                actionOnResource: createAuthPolicyActionOnResource,
-                actionOnResourceValue: true)
+                actionKey: createAuthPolicies,
+                actionValue: true)
             
             let readRole = ABACAuthorizationPolicyModel(
                 roleName: role.name,
-                actionOnResource: readRoleActionOnResource,
-                actionOnResourceValue: true)
+                actionKey: readRoles,
+                actionValue: true)
             
             let readAuth = ABACAuthorizationPolicyModel(
                 roleName: role.name,
-                actionOnResource: readAuthActionOnResource,
-                actionOnResourceValue: true)
+                actionKey: readAuths,
+                actionValue: true)
             
             
             let policySaveResults: [EventLoopFuture<Void>] = [
@@ -185,22 +187,22 @@ struct AdminAuthorizationPolicyRestricted: Migration {
             let deleteResults = [
                 ABACAuthorizationPolicyModel.query(on: database)
                     .filter(\.$roleName == role.name)
-                    .filter(\.$actionOnResourceKey == readAuthPolicyActionOnResource)
+                    .filter(\.$actionKey == readAuthPolicies)
                     .delete(),
                 ABACAuthorizationPolicyModel.query(on: database)
                     .filter(\.$roleName == role.name)
-                    .filter(\.$actionOnResourceKey == createAuthPolicyActionOnResource)
+                    .filter(\.$actionKey == createAuthPolicies)
                     .delete(),
                 ABACAuthorizationPolicyModel.query(on: database)
                     .filter(\.$roleName == role.name)
-                    .filter(\.$actionOnResourceKey == readRoleActionOnResource)
+                    .filter(\.$actionKey == readRoles)
                     .delete(),
                 ABACAuthorizationPolicyModel.query(on: database)
                     .filter(\.$roleName == role.name)
-                    .filter(\.$actionOnResourceKey == readAuthActionOnResource)
+                    .filter(\.$actionKey == readAuths)
                     .delete(),
             ]
-            deleteResults.flatten(on: database.eventLoop)
+            return deleteResults.flatten(on: database.eventLoop)
         }
     }
 }
@@ -237,13 +239,17 @@ app.migrations.use(AdminAuthorizationPolicyRestricted(), on: .psql)
 
 To Load the persisted rules on startup go to `boot.swift`
 ```swift
-
 // MARK: Authorization
 
-let rules = try ABACAuthorizationPolicyModel.query(on: app.db).all().wait()
-for rule in rules {
-    let conditions = try rule.$conditions.query(on: app.db).all().wait()
-    try app.abacAuthorizationPolicyService.addToInMemoryCollection(authPolicy: rule, conditionValues: conditions)
+if let sql = app.db as? SQLDatabase {
+    let query = SQLQueryString("SELECT EXISTS (SELECT FROM pg_tables where tablename  = '" + ABACAuthorizationPolicyModel.schema + "');")
+    let abacPolicySchema = try sql.raw(query).first(decoding: [String:Bool].self).wait()
+    if abacPolicySchema?.first?.value == true {
+        let policies = try app.abacAuthorizationRepo.getAllWithConditions().wait()
+        for policy in policies {
+            try app.abacAuthorizationPolicyService.addToInMemoryCollection(policy: policy, conditions: policy.conditions)
+        }
+    }
 }
 ```
 
