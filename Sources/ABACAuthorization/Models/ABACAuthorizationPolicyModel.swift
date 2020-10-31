@@ -119,12 +119,13 @@ public struct ABACAuthorizationPolicyModelMiddleware: ModelMiddleware {
         }
     }
     
+    
     public func delete(model: ABACAuthorizationPolicyModel, force: Bool, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
         // before operation
         return next.delete(model, force: force, on: db).map {
             // after operation
             ABACAuthorizationPolicyService.shared.removeFromInMemoryCollection(policy: model)
         }
-        
+
     }
 }

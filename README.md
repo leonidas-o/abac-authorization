@@ -1,6 +1,6 @@
 # ABACAuthorization
 
-This is an attribute based access control authorization system for the Swift Vapor Framework with FluentPostgreSQL.
+This is an attribute based access control authorization system/ role based access control system for the Swift Vapor Framework with FluentPostgreSQL. The usage of attributes are not mandatory, you can specify policies based on roles only.
 
 ## Getting Started
 
