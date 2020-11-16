@@ -82,20 +82,16 @@ extension ABACConditionModel: Content {}
 // MARK: - DTO conversions
 
 extension ABACConditionModel {
-    public func convertToABACCondition() -> ABACCondition? {
-        if let authorizationPolicyId = authorizationPolicy.id {
-            return ABACCondition(id: id,
-                                 key: key,
-                                 type: type,
-                                 operation: operation,
-                                 lhsType: lhsType,
-                                 lhs: lhs,
-                                 rhsType: rhsType,
-                                 rhs: rhs,
-                                 authorizationPolicyId: authorizationPolicyId)
-        } else {
-            return nil
-        }
+    public func convertToABACCondition() -> ABACCondition {
+        return ABACCondition(id: id,
+                             key: key,
+                             type: type,
+                             operation: operation,
+                             lhsType: lhsType,
+                             lhs: lhs,
+                             rhsType: rhsType,
+                             rhs: rhs,
+                             authorizationPolicyId: $authorizationPolicy.id)
     }
 }
 
