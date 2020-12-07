@@ -53,8 +53,8 @@ Your **AccessData** Model
 1. Needs a `userData` property
 2. Conform to `ABACAccessData`
 
-Your **CacheRepo**  
-Either conform your `CacheRepo` protocol or your actual repo to `ABACCacheRepo`  and implement its requirements. 
+Your **CacheRepo**
+1. Either conform your `CacheRepo` protocol or your actual repo to `ABACCacheRepo`  and implement its requirements. 
 
 
 An example of an **APIResource**
