@@ -53,11 +53,11 @@ Your **AccessData** Model
 1. Needs a `userData` property
 2. Conform to `ABACAccessData`
 
-Your **CacheRepo** 
-Either conform your `CacheRepo` protocol to `ABACCacheRepo` or your real repo and implement the requirements. 
+Your **CacheRepo**  
+Either conform your `CacheRepo` protocol or your actual repo to `ABACCacheRepo`  and implement its requirements. 
 
 
-An example of a **APIResource**
+An example of an **APIResource**
 A simple struct holding your resources, could look like:
 ```swift
 struct APIResource {
