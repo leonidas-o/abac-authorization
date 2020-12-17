@@ -21,6 +21,9 @@ In your `package.swift` add the abac-authorization package
     ...
 ```
 
+> Fluent and PostgreSQL is mandatory right now, but could be easily refactored to make use of other databases, too. Making other persistence repositories available is a matter of creating a new repo conforming to `ABACAuthorizationPersistenceRepo`. So your projects `package.swift` dependencies would contain the abac-authorization package + a specific repository package.
+
+
 ### Models
 
 #### Overview
