@@ -1,5 +1,4 @@
 import Vapor
-import Foundation
 
 
 public final class ABACMiddleware<AD: ABACAccessData>: Middleware {

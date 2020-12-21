@@ -47,33 +47,6 @@
         }
       },
       {
-        "package": "fluent-postgres-driver",
-        "repositoryURL": "https://github.com/vapor/fluent-postgres-driver.git",
-        "state": {
-          "branch": null,
-          "revision": "f310f8843fafa3134cf89d81b8b3480f16967f37",
-          "version": "2.1.0"
-        }
-      },
-      {
-        "package": "postgres-kit",
-        "repositoryURL": "https://github.com/vapor/postgres-kit.git",
-        "state": {
-          "branch": null,
-          "revision": "cbbe3ef8a0a8800301b8b76ab0f09dfc9e7306a2",
-          "version": "2.2.0"
-        }
-      },
-      {
-        "package": "postgres-nio",
-        "repositoryURL": "https://github.com/vapor/postgres-nio.git",
-        "state": {
-          "branch": null,
-          "revision": "3cf24967e54e3e63809593273b45b4e8135da6aa",
-          "version": "1.4.0"
-        }
-      },
-      {
         "package": "routing-kit",
         "repositoryURL": "https://github.com/vapor/routing-kit.git",
         "state": {

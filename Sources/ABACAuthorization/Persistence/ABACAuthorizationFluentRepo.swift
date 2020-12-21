@@ -1,9 +1,8 @@
 import Vapor
 import Fluent
-import FluentPostgresDriver
 
 
-public struct ABACAuthorizationPostgreSQLRepo: ABACAuthorizationPersistenceRepo {
+public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
     
     let db: Database
     

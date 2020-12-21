@@ -1,6 +1,7 @@
 import Vapor
 import Foundation
 
+
 protocol AuthorizationValuable {
     var actionValue: Bool { get set }
     var condition: ConditionValuable? { get set}

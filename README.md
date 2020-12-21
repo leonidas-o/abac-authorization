@@ -1,11 +1,11 @@
 # ABACAuthorization
 
-This is an attribute based access control authorization system/ role based access control system for the Swift Vapor Framework with FluentPostgreSQL. The usage of attributes are not mandatory, you can specify policies based on roles only.
+This is an attribute based access control authorization system/ role based access control system for the Swift Vapor Framework + Fluent. The usage of attributes is not mandatory, you can specify policies based on roles only.
 
 ## Getting Started
 
 ### Setup dependencies
-In your `package.swift` add the abac-authorization package
+In your `package.swift` add the abac-authorization package (+ Fluent and your needed driver package, for example FluentPostgresDriver)
 ```swift
     ...
         .package(url: "https://github.com/leonidas-o/abac-authorization.git", from: "x.x.x")
@@ -14,14 +14,12 @@ In your `package.swift` add the abac-authorization package
     targets: [    
         .target(name: "App", dependencies: [
             .product(name: "Fluent", package: "fluent"),
-            .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"),
+            .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"), // or any other driver
             .product(name: "Vapor", package: "vapor"),
             .product(name: "ABACAuthorization", package: "abac-authorization"),
         ])
     ...
 ```
-
-> Fluent and PostgreSQL is mandatory right now, but could be easily refactored to make use of other databases, too. Making other persistence repositories available is a matter of creating a new repo conforming to `ABACAuthorizationPersistenceRepo`. So your projects `package.swift` dependencies would contain the abac-authorization package + a specific repository package.
 
 
 ### Models
@@ -215,10 +213,10 @@ struct RestrictedABACAuthorizationPoliciesMigration: Migration {
 
 Open `configure.swift` 
 
-Import the package (`import ABACAuthorization`) set the integrated PostgreSQL repository
+Import the package (`import ABACAuthorization`) set the integrated Fluent repository
 ```swift
 app.abacAuthorizationRepoFactory.use { req in
-    ABACAuthorizationPostgreSQLRepo(db: req.db)
+    ABACAuthorizationFluentRepo(db: req.db)
 }
 ```
 

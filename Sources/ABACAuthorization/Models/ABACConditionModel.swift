@@ -1,7 +1,5 @@
 import Vapor
 import Fluent
-import FluentPostgresDriver
-import Foundation
 
 
 /// Fluent Model
