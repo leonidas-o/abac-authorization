@@ -255,8 +255,11 @@ if let sql = app.db as? SQLDatabase {
 ```
 
 
-### High availability usage
-tbd
+### Horizontal scaling
+
+To achieve a fast decision making process for the evaluation if a request should be permitted or denied, all ABAC policies are stored in memory. This approach leads to some extra work to keep all instances, their in-memory policies, in sync.
+See the demo projects README for further information how to make this package horizontally scalable.
+
 
 
 ### Demo Project
