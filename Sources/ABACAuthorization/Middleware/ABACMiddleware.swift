@@ -52,7 +52,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
             case "DELETE":
                 action = .delete
             default:
-                return request.eventLoop.makeFailedFuture(Abort(.forbidden))
+                return request.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "ABAC: HTTP request method not allowed"))
             }
             
             
@@ -80,11 +80,11 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
             case .permit:
                 return next.respond(to: request)
             case .deny:
-                return request.eventLoop.makeFailedFuture(Abort(.forbidden))
+                return request.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "ABAC: Request denied"))
             case .indeterminate:
-                return request.eventLoop.makeFailedFuture(Abort(.forbidden))
+                return request.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "ABAC: Request indeterminate"))
             case .notapplicable:
-                return request.eventLoop.makeFailedFuture(Abort(.forbidden))
+                return request.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "ABAC: Request not applicable"))
             }
         }
         
