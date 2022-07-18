@@ -6,7 +6,7 @@ import Fluent
 public final class ABACConditionModel: Model {
     
     public enum Constant {
-        public static let defaultConditionKey = "default"
+        public static let defaultConditionKey = "key1"
     }
     
     public enum ConditionValueType: String, Codable, CaseIterable {
