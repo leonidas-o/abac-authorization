@@ -1,7 +1,6 @@
 import Foundation
 import NIO
 
-
 public protocol ABACCacheRepo {
-    func get<D: Decodable>(key: String, as type: D.Type) -> EventLoopFuture<D?>
+    func get<D>(key: String, as type: D.Type) async throws -> D? where D: Decodable
 }

@@ -1,6 +1,5 @@
 import Vapor
 
-
 public struct ABACAuthorizationPersistenceRepoFactory {
     var make: ((Request) -> ABACAuthorizationPersistenceRepo)?
     public mutating func use(_ make: @escaping ((Request) -> ABACAuthorizationPersistenceRepo)) {

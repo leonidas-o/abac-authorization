@@ -44,7 +44,8 @@ final class ABACMiddlewareTests: XCTestCase {
             self.eventLoop = eventLoop
         }
         
-        func get<D>(key: String, as type: D.Type) -> EventLoopFuture<D?> where D : Decodable {
+        func get<D>(key: String, as type: D.Type) async throws -> D? where D: Decodable {
+//        func get<D>(key: String, as type: D.Type) -> EventLoopFuture<D?> where D : Decodable {
             
             var accessDataDecoded: D? = nil
             switch key {
@@ -62,11 +63,11 @@ final class ABACMiddlewareTests: XCTestCase {
                 } catch {
                     // do nothing
                 }
-                return eventLoop.future(accessDataDecoded)
+                return accessDataDecoded
             case Constant.missingToken:
-                return eventLoop.future(accessDataDecoded)
+                return accessDataDecoded
             default:
-                return eventLoop.future(accessDataDecoded)
+                return accessDataDecoded
             }
         }
     }

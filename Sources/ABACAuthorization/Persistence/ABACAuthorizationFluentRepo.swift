@@ -1,7 +1,6 @@
 import Vapor
 import Fluent
 
-
 public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
     
     let db: Database
@@ -14,89 +13,96 @@ public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
     
     // MARK: - AuthorizationPolicy
     
-    public func save(_ policy: ABACAuthorizationPolicyModel) -> EventLoopFuture<Void> {
-        return policy.save(on: db)
+    public func save(_ policy: ABACAuthorizationPolicyModel) async throws {
+        return try await policy.save(on: db)
     }
     
     
-    public func saveBulk(_ policies: [ABACAuthorizationPolicyModel]) -> EventLoopFuture<Void> {
-        
-        let policySaveResults = policies.map { $0.save(on: db) }
-        return policySaveResults.flatten(on: db.eventLoop)
+    public func saveBulk(_ policies: [ABACAuthorizationPolicyModel]) async throws {
+        await withThrowingTaskGroup(of: Void.self) { taskGroup in
+            for policy in policies {
+                taskGroup.addTask {
+                    try await policy.save(on: db)
+                }
+            }
+        }
     }
     
     
-    public func getAllWithConditions() -> EventLoopFuture<[ABACAuthorizationPolicyModel]> {
-        return ABACAuthorizationPolicyModel.query(on: db).with(\.$conditions).all()
+    public func getAllWithConditions() async throws -> [ABACAuthorizationPolicyModel] {
+        return try await ABACAuthorizationPolicyModel.query(on: db).with(\.$conditions).all()
     }
     
     
-    public func get(_ policyId: ABACAuthorizationPolicyModel.IDValue) -> EventLoopFuture<ABACAuthorizationPolicyModel?> {
-        return ABACAuthorizationPolicyModel.find(policyId, on: db)
+    public func get(_ policyId: ABACAuthorizationPolicyModel.IDValue) async throws -> ABACAuthorizationPolicyModel? {
+        return try await ABACAuthorizationPolicyModel.find(policyId, on: db)
     }
     
     
-    public func getWithConditions(_ policyId: ABACAuthorizationPolicyModel.IDValue) -> EventLoopFuture<ABACAuthorizationPolicyModel?> {
-        return ABACAuthorizationPolicyModel.query(on: db).with(\.$conditions).filter(\.$id == policyId).first()
+    public func getWithConditions(_ policyId: ABACAuthorizationPolicyModel.IDValue) async throws -> ABACAuthorizationPolicyModel? {
+        return try await ABACAuthorizationPolicyModel.query(on: db).with(\.$conditions).filter(\.$id == policyId).first()
     }
     
     
-    public func update(_ policy: ABACAuthorizationPolicyModel, updatedPolicy: ABACAuthorizationPolicy) -> EventLoopFuture<Void> {
-           
+    public func update(_ policy: ABACAuthorizationPolicyModel, updatedPolicy: ABACAuthorizationPolicy) async throws {
         policy.roleName = updatedPolicy.roleName
         policy.actionKey = updatedPolicy.actionKey
         policy.actionValue = updatedPolicy.actionValue
-        
-        return policy.save(on: db)
+        return try await policy.save(on: db)
     }
     
     
-    public func delete(_ policyId: ABACAuthorizationPolicyModel.IDValue) -> EventLoopFuture<Void> {
-        return ABACAuthorizationPolicyModel.query(on: db).filter(\.$id == policyId).delete()
+    public func delete(_ policyId: ABACAuthorizationPolicyModel.IDValue) async throws {
+        return try await ABACAuthorizationPolicyModel.query(on: db).filter(\.$id == policyId).delete()
     }
     
     
-    public func delete(_ policy: ABACAuthorizationPolicyModel) -> EventLoopFuture<Void> {
-        return policy.delete(on: db)
+    public func delete(_ policy: ABACAuthorizationPolicyModel) async throws {
+        return try await policy.delete(on: db)
     }
     
     
-    public func delete(_ policies: [ABACAuthorizationPolicyModel]) -> EventLoopFuture<Void> {
-        let authPolicyDeleteResults = policies.map { policy in
-            policy.delete(on: db)
+    public func delete(_ policies: [ABACAuthorizationPolicyModel]) async throws {
+        await withThrowingTaskGroup(of: Void.self) { taskGroup in
+            for policy in policies {
+                taskGroup.addTask {
+                    try await policy.delete(on: db)
+                }
+            }
         }
-        return authPolicyDeleteResults.flatten(on: db.eventLoop)
     }
     
     
-    public func delete(actionOnResourceKeys: [String]) -> EventLoopFuture<Void> {
-        let authPolicyDeleteResults = actionOnResourceKeys.map { key in
-            return ABACAuthorizationPolicyModel.query(on: db).filter(\.$actionKey == key).delete()
+    public func delete(actionOnResourceKeys: [String]) async throws {
+        await withThrowingTaskGroup(of: Void.self) { taskGroup in
+            for key in actionOnResourceKeys {
+                taskGroup.addTask {
+                    try await ABACAuthorizationPolicyModel.query(on: db).filter(\.$actionKey == key).delete()
+                }
+            }
         }
-        return authPolicyDeleteResults.flatten(on: db.eventLoop)
     }
     
     
     
     // MARK: - Conditions
     
-    public func saveCondition(_ condition: ABACConditionModel) -> EventLoopFuture<Void> {
-        condition.save(on: db)
+    public func saveCondition(_ condition: ABACConditionModel) async throws {
+        return try await condition.save(on: db)
     }
     
     
-    public func getCondition(_ conditionId: ABACConditionModel.IDValue) -> EventLoopFuture<ABACConditionModel?> {
-        return ABACConditionModel.find(conditionId, on: db)
+    public func getCondition(_ conditionId: ABACConditionModel.IDValue) async throws -> ABACConditionModel? {
+        return try await ABACConditionModel.find(conditionId, on: db)
     }
     
     
-    public func getConditionWithPolicy(_ conditionId: ABACConditionModel.IDValue) -> EventLoopFuture<ABACConditionModel?> {
-        return ABACConditionModel.query(on: db).with(\.$authorizationPolicy).filter(\.$id == conditionId).first()
+    public func getConditionWithPolicy(_ conditionId: ABACConditionModel.IDValue) async throws -> ABACConditionModel? {
+        return try await ABACConditionModel.query(on: db).with(\.$authorizationPolicy).filter(\.$id == conditionId).first()
     }
     
     
-    public func updateCondition(_ condition: ABACConditionModel, updatedCondition: ABACCondition) -> EventLoopFuture<Void> {
-        
+    public func updateCondition(_ condition: ABACConditionModel, updatedCondition: ABACCondition) async throws {
         condition.key = updatedCondition.key
         condition.type = updatedCondition.type
         condition.operation = updatedCondition.operation
@@ -105,31 +111,30 @@ public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
         condition.rhsType = updatedCondition.rhsType
         condition.rhs = updatedCondition.rhs
         //condition.authorizationPolicyID = updatedConditionValueDB.authorizationPolicyID
-        
-        return condition.save(on: db)
+        return try await condition.save(on: db)
     }
     
     
-    public func deleteCondition(_ conditionId: ABACConditionModel.IDValue) -> EventLoopFuture<Void> {
-        return ABACConditionModel.query(on: db).filter(\.$id == conditionId).delete()
+    public func deleteCondition(_ conditionId: ABACConditionModel.IDValue) async throws {
+        return try await ABACConditionModel.query(on: db).filter(\.$id == conditionId).delete()
     }
     
     
-    public func deleteCondition(_ condition: ABACConditionModel) -> EventLoopFuture<Void> {
-        return condition.delete(on: db)
+    public func deleteCondition(_ condition: ABACConditionModel) async throws {
+        return try await condition.delete(on: db)
     }
     
     
     
     // MARK: - Relations
     
-    public func getAllConditions(_ authPolicy: ABACAuthorizationPolicyModel) -> EventLoopFuture<[ABACConditionModel]> {
-        authPolicy.$conditions.query(on: db).all()
+    public func getAllConditions(_ authPolicy: ABACAuthorizationPolicyModel) async throws -> [ABACConditionModel] {
+        return try await authPolicy.$conditions.query(on: db).all()
     }
     
     
-    public func getConditionPolicy(_ condition: ABACConditionModel) -> EventLoopFuture<ABACAuthorizationPolicyModel> {
-        return condition.$authorizationPolicy.get(on: db)
+    public func getConditionPolicy(_ condition: ABACConditionModel) async throws -> ABACAuthorizationPolicyModel {
+        return try await condition.$authorizationPolicy.get(on: db)
     }
     
 }

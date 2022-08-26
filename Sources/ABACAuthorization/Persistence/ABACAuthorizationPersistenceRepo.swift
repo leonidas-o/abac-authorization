@@ -1,26 +1,25 @@
 import NIO
 
-
 public protocol ABACAuthorizationPersistenceRepo {
     // ABACAuthorizationPolicies
-    func save(_ policy: ABACAuthorizationPolicyModel) -> EventLoopFuture<Void>
-    func saveBulk(_ policies: [ABACAuthorizationPolicyModel]) -> EventLoopFuture<Void>
-    func getAllWithConditions() -> EventLoopFuture<[ABACAuthorizationPolicyModel]>
-    func get(_ policyId: ABACAuthorizationPolicyModel.IDValue) -> EventLoopFuture<ABACAuthorizationPolicyModel?>
-    func getWithConditions(_ policyId: ABACAuthorizationPolicyModel.IDValue) -> EventLoopFuture<ABACAuthorizationPolicyModel?>
-    func update(_ policy: ABACAuthorizationPolicyModel, updatedPolicy: ABACAuthorizationPolicy) -> EventLoopFuture<Void>
-    func delete(_ policyId: ABACAuthorizationPolicyModel.IDValue) -> EventLoopFuture<Void>
-    func delete(_ policy: ABACAuthorizationPolicyModel) -> EventLoopFuture<Void>
-    func delete(_ policies: [ABACAuthorizationPolicyModel]) -> EventLoopFuture<Void>
-    func delete(actionOnResourceKeys: [String]) -> EventLoopFuture<Void>
+    func save(_ policy: ABACAuthorizationPolicyModel) async throws -> Void
+    func saveBulk(_ policies: [ABACAuthorizationPolicyModel]) async throws
+    func getAllWithConditions() async throws -> [ABACAuthorizationPolicyModel]
+    func get(_ policyId: ABACAuthorizationPolicyModel.IDValue) async throws -> ABACAuthorizationPolicyModel?
+    func getWithConditions(_ policyId: ABACAuthorizationPolicyModel.IDValue) async throws -> ABACAuthorizationPolicyModel?
+    func update(_ policy: ABACAuthorizationPolicyModel, updatedPolicy: ABACAuthorizationPolicy) async throws
+    func delete(_ policyId: ABACAuthorizationPolicyModel.IDValue) async throws
+    func delete(_ policy: ABACAuthorizationPolicyModel) async throws
+    func delete(_ policies: [ABACAuthorizationPolicyModel]) async throws
+    func delete(actionOnResourceKeys: [String]) async throws
     // ABACConditions
-    func saveCondition(_ condition: ABACConditionModel) -> EventLoopFuture<Void>
-    func getCondition(_ conditionId: ABACConditionModel.IDValue) -> EventLoopFuture<ABACConditionModel?>
-    func getConditionWithPolicy(_ conditionId: ABACConditionModel.IDValue) -> EventLoopFuture<ABACConditionModel?>
-    func updateCondition(_ condition: ABACConditionModel, updatedCondition: ABACCondition) -> EventLoopFuture<Void>
-    func deleteCondition(_ conditionId: ABACConditionModel.IDValue) -> EventLoopFuture<Void>
-    func deleteCondition(_ condition: ABACConditionModel) -> EventLoopFuture<Void>
+    func saveCondition(_ condition: ABACConditionModel) async throws
+    func getCondition(_ conditionId: ABACConditionModel.IDValue) async throws -> ABACConditionModel?
+    func getConditionWithPolicy(_ conditionId: ABACConditionModel.IDValue) async throws -> ABACConditionModel?
+    func updateCondition(_ condition: ABACConditionModel, updatedCondition: ABACCondition) async throws
+    func deleteCondition(_ conditionId: ABACConditionModel.IDValue) async throws
+    func deleteCondition(_ condition: ABACConditionModel) async throws
     // Relations
-    func getAllConditions(_ authPolicy: ABACAuthorizationPolicyModel) -> EventLoopFuture<[ABACConditionModel]>
-    func getConditionPolicy(_ condition: ABACConditionModel) -> EventLoopFuture<ABACAuthorizationPolicyModel>
+    func getAllConditions(_ authPolicy: ABACAuthorizationPolicyModel) async throws -> [ABACConditionModel]
+    func getConditionPolicy(_ condition: ABACConditionModel) async throws -> ABACAuthorizationPolicyModel
 }

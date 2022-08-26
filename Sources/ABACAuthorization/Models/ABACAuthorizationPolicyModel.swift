@@ -1,7 +1,6 @@
 import Vapor
 import Fluent
 
-
 public protocol ABACAuthorizationPolicyDefinition {
     var id: UUID? { get set }
     var roleName: String { get set }
@@ -71,12 +70,12 @@ extension ABACAuthorizationPolicy {
 
 // MARK: - Migration
 
-public struct ABACAuthorizationPolicyModelMigration: Migration {
+public struct ABACAuthorizationPolicyModelMigration: AsyncMigration {
     
     public init() {}
     
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("abac_auth_policy")
+    public func prepare(on database: Database) async throws {
+        try await database.schema("abac_auth_policy")
         .id()
         .field("role_name", .string, .required)
         .field("action_key", .string, .required)
@@ -85,8 +84,8 @@ public struct ABACAuthorizationPolicyModelMigration: Migration {
         .create()
     }
     
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("abac_auth_policy")
+    public func revert(on database: Database) async throws {
+        try await database.schema("abac_auth_policy")
         .delete()
     }
 }
@@ -95,35 +94,30 @@ public struct ABACAuthorizationPolicyModelMigration: Migration {
 
 // MARK: - ModelMiddleware
 
-public struct ABACAuthorizationPolicyModelMiddleware: ModelMiddleware {
+public struct ABACAuthorizationPolicyModelMiddleware: AsyncModelMiddleware {
     
     public init() {}
     
-    public func update(model: ABACAuthorizationPolicyModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+    public func update(model: ABACAuthorizationPolicyModel, on db: Database, next: AnyAsyncModelResponder) async throws {
         // before operation
-        return next.update(model, on: db).map {
-            // after operation
-            _ = model.$conditions.query(on: db).all().flatMapThrowing { conditions in
-                try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: model, conditions: conditions)
-            }
-        }
+        try await next.update(model, on: db)
+        // after operation
+        let conditions = try await model.$conditions.query(on: db).all()
+        try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: model, conditions: conditions)
     }
     
-    public func create(model: ABACAuthorizationPolicyModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+    public func create(model: ABACAuthorizationPolicyModel, on db: Database, next: AnyAsyncModelResponder) async throws {
         // before operation
-        return next.create(model, on: db).flatMapThrowing {
-            // after operation
-            try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: model, conditions: [])
-        }
+        try await next.create(model, on: db)
+        // after operation
+        try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: model, conditions: [])
     }
     
     
-    public func delete(model: ABACAuthorizationPolicyModel, force: Bool, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void> {
+    public func delete(model: ABACAuthorizationPolicyModel, force: Bool, on db: Database, next: AnyAsyncModelResponder) async throws {
         // before operation
-        return next.delete(model, force: force, on: db).map {
-            // after operation
-            ABACAuthorizationPolicyService.shared.removeFromInMemoryCollection(policy: model)
-        }
-
+        try await next.delete(model, force: force, on: db)
+        // after operation
+        ABACAuthorizationPolicyService.shared.removeFromInMemoryCollection(policy: model)
     }
 }

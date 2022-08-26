@@ -1,7 +1,7 @@
 import Vapor
 
 
-public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
+public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     
     private let authorizationPolicyService: ABACAuthorizationPolicyService
     private let cache: ABACCacheRepo
@@ -17,77 +17,71 @@ public final class ABACMiddleware<AD: ABACAccessData>: Middleware {
     
     // MARK: - Policy Enforcement Point (PEP)
     
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         
         // TODO: Examine: What if api versioning introduced or nested resources, etc.?
         //        guard let resource = pathComponents.item(after: apiResources.apiEntry) else {
         //            throw Abort(.internalServerError)
         //        }
         let pathComponents = request.url.path.pathComponents
-        let resource = self.getRequestedAndProtectedResource(fromPathComponents: pathComponents)
+        let resource = getRequestedAndProtectedResource(fromPathComponents: pathComponents)
         guard !resource.isEmpty else {
             // permit access as requested resource is unprotected
-            return next.respond(to: request)
+            return try await next.respond(to: request)
         }
         
-        guard let accessTokenString = request.headers.bearerAuthorization?.token else {
-            return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
+        guard let accessTokenString = request.headers.bearerAuthorization?.token,
+              let accessToken = try await cache.get(key: accessTokenString, as: AD.self) else {
+            throw Abort(.unauthorized)
         }
-        return cache.get(key: accessTokenString, as: AD.self).unwrap(or: Abort(.unauthorized)).flatMap { accessToken in
                
-            // TODO: refactor actions constant to an array needed for
-            // api bulk requests, where .create and .update is performed.
-            // right now, user can update a AuthorizationPolicy with
-            // only a 'create' policy over a bulk create route
-            let action: ABACAPIAction
-            switch request.method.string {
-            case "GET":
-                action = .read
-            case "POST":
-                action = .create
-            case "PUT":
-                action = .update
-            case "PATCH":
-                action = .update
-            case "DELETE":
-                action = .delete
-            default:
-                return request.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "ABAC: HTTP request method not allowed"))
-            }
-            
-            
+        // TODO: refactor actions constant to an array needed for
+        // api bulk requests, where .create and .update is performed.
+        // right now, user can update a AuthorizationPolicy with
+        // only a 'create' policy over a bulk create route
+        let action: ABACAPIAction
+        switch request.method.string {
+        case "GET":
+            action = .read
+        case "POST":
+            action = .create
+        case "PUT":
+            action = .update
+        case "PATCH":
+            action = .update
+        case "DELETE":
+            action = .delete
+        default:
+            throw Abort(.forbidden, reason: "ABAC: HTTP request method not allowed")
+        }
+        
+        
+        
 //        return accessToken.flatMap { accessToken -> EventLoopFuture<Response> in
 //            guard let accessToken = accessToken else {
 //                return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
 //            }
-            
-            
-            var pdpRequests: [PDPRequest] = []
-            for role in accessToken.userData.roles {
-                let pdpRequest = PDPRequest(role: role.name,
-                                            action: action.rawValue,
-                                            onResource: resource)
-                pdpRequests.append(pdpRequest)
-            }
-            
-            var decision = Decision.notapplicable
-            do {
-                decision = try self.checkPDPRequests(pdpRequests, on: accessToken.userData)
-            } catch {
-                return request.eventLoop.makeFailedFuture(error)
-            }
-            switch decision {
-            case .permit:
-                return next.respond(to: request)
-            case .deny:
-                return request.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "ABAC: Request denied"))
-            case .indeterminate:
-                return request.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "ABAC: Request indeterminate"))
-            case .notapplicable:
-                return request.eventLoop.makeFailedFuture(Abort(.forbidden, reason: "ABAC: Request not applicable"))
-            }
+        
+        
+        var pdpRequests: [PDPRequest] = []
+        for role in accessToken.userData.roles {
+            let pdpRequest = PDPRequest(role: role.name,
+                                        action: action.rawValue,
+                                        onResource: resource)
+            pdpRequests.append(pdpRequest)
         }
         
+        let decision = try checkPDPRequests(pdpRequests, on: accessToken.userData)
+        switch decision {
+        case .permit:
+            return try await next.respond(to: request)
+        case .deny:
+            throw Abort(.forbidden, reason: "ABAC: Request denied")
+        case .indeterminate:
+            throw Abort(.forbidden, reason: "ABAC: Request indeterminate")
+        case .notapplicable:
+            throw Abort(.forbidden, reason: "ABAC: Request not applicable")
+        }
     }
     
     
