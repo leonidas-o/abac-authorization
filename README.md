@@ -103,7 +103,7 @@ struct APIResource {
 ### DB Seeding 
 #### Admin user
 ```swift
-struct AdminUser: Migration {
+struct AdminUser: AsyncMigration {
     
     enum Constant {
         static let name = "Admin"
@@ -113,7 +113,7 @@ struct AdminUser: Migration {
     
     
     
-    func prepare(on database: Database) -> EventLoopFuture<Void> {
+    func prepare(on database: Database) async throws {
         let random = [UInt8].random(count: Constant.passwordLength).base64
         print("\nPASSWORD: \(random)") // TODO: use logger
         let password = try? Bcrypt.hash(random)
@@ -124,11 +124,11 @@ struct AdminUser: Migration {
         let user = UserModel(name: Constant.name,
                              email: Constant.email,
                              password: hashedPassword)
-        return user.save(on: database)
+        try await user.save(on: database)
     }
     
-    func revert(on database: Database) -> EventLoopFuture<Void> {
-        UserModel.query(on: database).filter(\.$email == Constant.email)
+    func revert(on database: Database) async throws {
+        try await UserModel.query(on: database).filter(\.$email == Constant.email)
             .delete()
     }
 }
@@ -140,7 +140,7 @@ It is recommended to create a minimal set of rules to read, create auth policies
 ```swift
 import ABACAuthorization
 
-struct RestrictedABACAuthorizationPoliciesMigration: Migration {
+struct RestrictedABACAuthorizationPoliciesMigration: AsyncMigration {
     
     let readAuthPolicies = "\(ABACAPIAction.read)\(APIResource.Resource.abacAuthPolicies.rawValue)"
     let createAuthPolicies = "\(ABACAPIAction.create)\(APIResource.Resource.abacAuthPolicies.rawValue)"
@@ -148,63 +148,60 @@ struct RestrictedABACAuthorizationPoliciesMigration: Migration {
     let readAuths = "\(ABACAPIAction.read)\(APIResource.Resource.auth.rawValue)"
     
     
-    func prepare(on database: Database) -> EventLoopFuture<Void> {
-        RoleModel.query(on: database).first().unwrap(or: Abort(.internalServerError)).flatMap { role in
-            
-            let readAuthPolicy = ABACAuthorizationPolicyModel(
-                roleName: role.name,
-                actionKey: readAuthPolicies,
-                actionValue: true)
-            
-            let writeAuthPolicy = ABACAuthorizationPolicyModel(
-                roleName: role.name,
-                actionKey: createAuthPolicies,
-                actionValue: true)
-            
-            let readRole = ABACAuthorizationPolicyModel(
-                roleName: role.name,
-                actionKey: readRoles,
-                actionValue: true)
-            
-            let readAuth = ABACAuthorizationPolicyModel(
-                roleName: role.name,
-                actionKey: readAuths,
-                actionValue: true)
-            
-            
-            let policySaveResults: [EventLoopFuture<Void>] = [
-                readAuthPolicy.save(on: database),
-                writeAuthPolicy.save(on: database),
-                readRole.save(on: database),
-                readAuth.save(on: database)
-            ]
-            return policySaveResults.flatten(on: database.eventLoop)
+    func prepare(on database: Database) async throws {
+        guard let role = try await RoleModel.query(on: database).first() else {
+            thorw Abort(.internalServerError)
         }
+            
+        let readAuthPolicy = ABACAuthorizationPolicyModel(
+            roleName: role.name,
+            actionKey: readAuthPolicies,
+            actionValue: true)
+        
+        let writeAuthPolicy = ABACAuthorizationPolicyModel(
+            roleName: role.name,
+            actionKey: createAuthPolicies,
+            actionValue: true)
+        
+        let readRole = ABACAuthorizationPolicyModel(
+            roleName: role.name,
+            actionKey: readRoles,
+            actionValue: true)
+        
+        let readAuth = ABACAuthorizationPolicyModel(
+            roleName: role.name,
+            actionKey: readAuths,
+            actionValue: true)
+            
+        async let readAuthPolicyResponse: () = readAuthPolicy.save(on: database)
+        async let writeAuthPolicyResponse: () = writeAuthPolicy.save(on: database)
+        async let readRoleResponse: () = readRole.save(on: database)
+        async let readAuthResponse: () = readAuth.save(on: database)
+        _ = try await (readAuthPolicyResponse, writeAuthPolicyResponse, readRoleResponse, readAuthResponse)
     }
     
-    func revert(on database: Database) -> EventLoopFuture<Void> {
-        RoleModel.query(on: database).first().unwrap(or: Abort(.internalServerError)).flatMap { role in
-            
-            let deleteResults = [
-                ABACAuthorizationPolicyModel.query(on: database)
-                    .filter(\.$roleName == role.name)
-                    .filter(\.$actionKey == readAuthPolicies)
-                    .delete(),
-                ABACAuthorizationPolicyModel.query(on: database)
-                    .filter(\.$roleName == role.name)
-                    .filter(\.$actionKey == createAuthPolicies)
-                    .delete(),
-                ABACAuthorizationPolicyModel.query(on: database)
-                    .filter(\.$roleName == role.name)
-                    .filter(\.$actionKey == readRoles)
-                    .delete(),
-                ABACAuthorizationPolicyModel.query(on: database)
-                    .filter(\.$roleName == role.name)
-                    .filter(\.$actionKey == readAuths)
-                    .delete(),
-            ]
-            return deleteResults.flatten(on: database.eventLoop)
+    func revert(on database: Database) async throws {
+        guard let role =  try await RoleModel.query(on: database).first() else {
+            throw Abort(.internalServerError)
         }
+        
+        async let readAuthPolicyResponse: () = ABACAuthorizationPolicyModel.query(on: database)
+            .filter(\.$roleName == role.name)
+            .filter(\.$actionKey == readAuthPolicies)
+            .delete()
+        async let writeAuthPolicyResponse: () = ABACAuthorizationPolicyModel.query(on: database)
+            .filter(\.$roleName == role.name)
+            .filter(\.$actionKey == createAuthPolicies)
+            .delete()
+        async let readRoleResponse: () = ABACAuthorizationPolicyModel.query(on: database)
+            .filter(\.$roleName == role.name)
+            .filter(\.$actionKey == readRoles)
+            .delete()
+        async let readAuthResponse: () = ABACAuthorizationPolicyModel.query(on: database)
+            .filter(\.$roleName == role.name)
+            .filter(\.$actionKey == readAuths)
+            .delete()
+        _ = try await (readAuthPolicyResponse, writeAuthPolicyResponse, readRoleResponse, readAuthResponse)
     }
 }
 ```
