@@ -94,11 +94,11 @@ extension ABACAuthorizationPolicyService {
     private func add(policy: ABACAuthorizationPolicyModel, conditionKey: String, authValues: Authorization) {
         if self.authPolicyCollection[policy.roleName] == nil {
             self.authPolicyCollection[policy.roleName] = [policy.actionKey:[conditionKey:authValues]]
-        }
-        if self.authPolicyCollection[policy.roleName]![policy.actionKey] == nil {
+        } else if self.authPolicyCollection[policy.roleName]![policy.actionKey] == nil {
             self.authPolicyCollection[policy.roleName]![policy.actionKey] = [conditionKey:authValues]
+        } else {
+            self.authPolicyCollection[policy.roleName]![policy.actionKey]![conditionKey] = authValues
         }
-        self.authPolicyCollection[policy.roleName]![policy.actionKey]![conditionKey] = authValues
     }
 }
 
