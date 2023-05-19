@@ -113,7 +113,7 @@ extension ABACAuthorizationPolicyService {
         self.authPolicyCollection[policy.roleName]?[policy.actionKey]?.removeValue(forKey: condition.key)
     }
     
-    func removeAllFromInMemoryCollection() {
+    public func removeAllFromInMemoryCollection() {
         self.authPolicyCollection.removeAll()
     }
 }
