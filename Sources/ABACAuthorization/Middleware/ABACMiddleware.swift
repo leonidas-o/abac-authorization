@@ -24,7 +24,8 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         //            throw Abort(.internalServerError)
         //        }
         let pathComponents = request.url.path.pathComponents
-        let resource = getRequestedAndProtectedResource(fromPathComponents: pathComponents)
+        let range = getPathComponentsRange(pathComponents)
+        let resource = getRequestedAndProtectedResource(fromPathComponents: pathComponents[range])
         guard !resource.isEmpty else {
             // permit access as requested resource is unprotected
             return try await next.respond(to: request)
@@ -84,16 +85,38 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         }
     }
     
+    private func getPathComponentsRange(_ pathComponents: [PathComponent]) -> Range<Int> {
+        var startIndex = 0
+        for path in pathComponents {
+            if !protectedResources.contains(path.description) {
+                startIndex += 1
+            } else {
+                return (startIndex..<pathComponents.endIndex)
+            }
+        }
+        return (startIndex..<pathComponents.endIndex)
+    }
     
-    private func getRequestedAndProtectedResource(fromPathComponents pathComponents: [PathComponent]) -> String {
-        var lastProtectedResource: String = ""
-        for path in pathComponents.reversed() {
-            if protectedResources.contains(path.description) {
-                lastProtectedResource = path.description
+    private func getRequestedAndProtectedResource(fromPathComponents pathComponents: ArraySlice<PathComponent>) -> String {
+        var protectedResource: String = ""
+        // start with subdir lookup
+        for index in pathComponents.indices {
+            let joined = pathComponents[pathComponents.startIndex..<(pathComponents.endIndex-index)].string
+            if protectedResources.contains(joined) {
+                protectedResource = joined
                 break
             }
         }
-        return lastProtectedResource
+        // afterwards single path lookup
+        if protectedResource.isEmpty {
+            for path in pathComponents.reversed() {
+                if protectedResources.contains(path.description) {
+                    protectedResource = path.description
+                    break
+                }
+            }
+        }
+        return protectedResource
         
 //        let resources = Set(pathComponents).intersection(Set(apiResource.all))
 //
