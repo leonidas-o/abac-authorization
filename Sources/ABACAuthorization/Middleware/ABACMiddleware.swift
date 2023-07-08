@@ -101,13 +101,15 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         var protectedResource: String = ""
         // start with subdir lookup
         for index in 0..<pathComponents.count {
+            // must have at least two paths otherwise continue with single path lookup
+            guard pathComponents.count-index >= 2 else { break }
             let joined = pathComponents[pathComponents.startIndex..<(pathComponents.endIndex-index)].string
             if protectedResources.contains(joined) {
                 protectedResource = joined
                 break
             }
         }
-        // afterwards single path lookup
+        // afterwards single path lookup starting from the back
         if protectedResource.isEmpty {
             for path in pathComponents.reversed() {
                 if protectedResources.contains(path.description) {
