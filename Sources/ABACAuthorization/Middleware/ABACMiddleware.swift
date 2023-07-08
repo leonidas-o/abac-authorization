@@ -100,7 +100,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     private func getRequestedAndProtectedResource(fromPathComponents pathComponents: ArraySlice<PathComponent>) -> String {
         var protectedResource: String = ""
         // start with subdir lookup
-        for index in pathComponents.indices {
+        for index in 0..<pathComponents.count {
             let joined = pathComponents[pathComponents.startIndex..<(pathComponents.endIndex-index)].string
             if protectedResources.contains(joined) {
                 protectedResource = joined
