@@ -19,10 +19,6 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     
     public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         
-        // TODO: Examine: What if api versioning introduced or nested resources, etc.?
-        //        guard let resource = pathComponents.item(after: apiResources.apiEntry) else {
-        //            throw Abort(.internalServerError)
-        //        }
         let pathComponents = request.url.path.pathComponents
         let range = getPathComponentsRange(pathComponents)
         let resource = getRequestedAndProtectedResource(fromPathComponents: pathComponents[range])
@@ -36,10 +32,10 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
             throw Abort(.unauthorized)
         }
                
-        // TODO: refactor actions constant to an array needed for
-        // api bulk requests, where .create and .update is performed.
-        // right now, user can update a AuthorizationPolicy with
-        // only a 'create' policy over a bulk create route
+        // TODO: refactor actions constant to an array
+        // needed for api bulk requests, where .create and .update
+        // is performed. Right now, user can update a AuthorizationPolicy
+        // with only a 'create' policy over a bulk create route
         let action: ABACAPIAction
         switch request.method.string {
         case "GET":
@@ -55,14 +51,6 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         default:
             throw Abort(.forbidden, reason: "ABAC: HTTP request method not allowed")
         }
-        
-        
-        
-//        return accessToken.flatMap { accessToken -> EventLoopFuture<Response> in
-//            guard let accessToken = accessToken else {
-//                return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
-//            }
-        
         
         var pdpRequests: [PDPRequest] = []
         for role in accessToken.userData.roles {

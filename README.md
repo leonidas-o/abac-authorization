@@ -70,13 +70,14 @@ struct APIResource {
     
     
     static let _allProtected: [String] = [
-        APIResource.Resource.abacAuthorizationPolicies,
-        APIResource.Resource.abacConditions,
-        APIResource.Resource.todos,
-        APIResource.Resource.users,
-        APIResource.Resource.myUser,
-        APIResource.Resource.roles,
-    ].map { $0.rawValue }.sorted { $0 < $1 }
+        APIResource.Resource.abacAuthorizationPolicies.rawValue,
+        APIResource.Resource.abacConditions.rawValue,
+        APIResource.Resource.todos.rawValue,
+        APIResource.Resource.users.rawValue,
+        APIResource.Resource.users.rawValue+"/"+APIResource.Resource.foo.rawValue,
+        APIResource.Resource.myUser.rawValue,
+        APIResource.Resource.roles.rawValue,
+    ].sorted { $0 < $1 }
 
     
     enum Resource: String, CaseIterable {
@@ -91,6 +92,7 @@ struct APIResource {
         case myUser = "my-user"
         case roles = "roles"
         case bulk = "bulk"
+        case foo = "foo"
     }
     
 }
