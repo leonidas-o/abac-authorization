@@ -254,4 +254,7 @@ extension ABACAuthorizationPolicyService {
     private func lessThan<T: Comparable>(lhs:T, rhs:T) -> Bool { return lhs < rhs }
     private func greaterOrEqualThan<T: Comparable>(lhs:T, rhs:T) -> Bool { return lhs >= rhs }
     private func lessOrEqualThan<T: Comparable>(lhs:T, rhs:T) -> Bool { return lhs <= rhs }
+//    private func subset<T: Comparable>(lhs:T, rhs:T) -> Bool {
+//        return lhs.contains(rhs)
+//    }
 }

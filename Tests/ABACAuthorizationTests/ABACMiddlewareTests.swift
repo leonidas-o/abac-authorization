@@ -37,15 +37,9 @@ final class ABACMiddlewareTests: XCTestCase {
     
     // MARK: - Test doubles
 
-    final class ABACCacheRepoSpy: ABACCacheRepo {
-        let eventLoop: EventLoop
-        
-        init(eventLoop: EventLoop) {
-            self.eventLoop = eventLoop
-        }
+    final class ABACAccessDataRepoSpy: ABACAccessDataRepo {
         
         func get<D>(key: String, as type: D.Type) async throws -> D? where D: Decodable {
-//        func get<D>(key: String, as type: D.Type) -> EventLoopFuture<D?> where D : Decodable {
             
             var accessDataDecoded: D? = nil
             switch key {
@@ -111,9 +105,9 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
         app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
@@ -145,9 +139,9 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
         app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
@@ -182,9 +176,9 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
         app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
@@ -211,9 +205,9 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
         app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
@@ -243,9 +237,9 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
         app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
@@ -279,9 +273,9 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
         app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }
@@ -322,9 +316,9 @@ final class ABACMiddlewareTests: XCTestCase {
         // Given
         let app = Application(.testing)
         defer { app.shutdown() }
-        let cache = ABACCacheRepoSpy(eventLoop: app.eventLoopGroup.next())
+        let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
-        let sut = ABACMiddleware<AccessData>(cache: cache, protectedResources: apiResource.abacProtectedResources)
+        let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
         app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
             return req.eventLoop.future(HTTPStatus.ok)
         }

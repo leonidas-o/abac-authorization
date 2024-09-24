@@ -4,13 +4,13 @@ import Vapor
 public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     
     private let authorizationPolicyService: ABACAuthorizationPolicyService
-    private let cache: ABACCacheRepo
+    private let accessDataRepo: ABACAccessDataRepo
     private let protectedResources: [String]
     
     
-    public init(_ type: AD.Type = AD.self, cache: ABACCacheRepo, protectedResources: [String]) {
+    public init(_ type: AD.Type = AD.self, accessDataRepo: ABACAccessDataRepo, protectedResources: [String]) {
         self.authorizationPolicyService = ABACAuthorizationPolicyService.shared
-        self.cache = cache
+        self.accessDataRepo = accessDataRepo
         self.protectedResources = protectedResources
     }
     
@@ -28,7 +28,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         }
         
         guard let accessTokenString = request.headers.bearerAuthorization?.token,
-              let accessToken = try await cache.get(key: accessTokenString, as: AD.self) else {
+              let accessData = try await accessDataRepo.get(key: accessTokenString, as: AD.self) else {
             throw Abort(.unauthorized)
         }
                
@@ -53,14 +53,14 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         }
         
         var pdpRequests: [PDPRequest] = []
-        for role in accessToken.userData.roles {
+        for role in accessData.userData.roles {
             let pdpRequest = PDPRequest(role: role.name,
                                         action: action.rawValue,
                                         onResource: resource)
             pdpRequests.append(pdpRequest)
         }
         
-        let decision = try checkPDPRequests(pdpRequests, on: accessToken.userData)
+        let decision = try checkPDPRequests(pdpRequests, on: accessData.userData)
         switch decision {
         case .permit:
             return try await next.respond(to: request)

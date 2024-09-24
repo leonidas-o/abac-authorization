@@ -30,8 +30,8 @@ In your `package.swift` add the abac-authorization package (+ Fluent and your ne
     - Your *Role* model conforming to `ABACRole`
     - Your *UserData* model conforming to `ABACUserData`
     - Your *AccessData* model conforming to `ABACAccessData`
-- Setup your cache repository:
-    - *YourCacheRepo* conforming to `ABACCacheRepo`
+- Setup your AccessData retrieving repository:
+    - *YourAccessDataRepo* conforming to `ABACAccessDataRepo`
 
 
 
@@ -54,8 +54,8 @@ Your **AccessData** Model
 1. Needs a `userData` property
 2. Conform to `ABACAccessData`
 
-Your **CacheRepo**
-1. Either conform your `CacheRepo` protocol or your actual repo to `ABACCacheRepo`  and implement its requirements. 
+Your **AccessDataRepo**
+1. Conform your repo protocol or your actual repo which is responsible for fetching the users AccessData to `ABACAccessDataRepo` and implement its required method. 
 
 
 An example of an **APIResource**
