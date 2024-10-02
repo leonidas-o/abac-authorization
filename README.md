@@ -49,17 +49,21 @@ Your **Role** Model
 Your **UserData** Model
 1. Needs a `roles` property - Array of roles (model should conform to Codable)
 2. Conform to `ABACUserData`
+> Contains all data which should be cached when authenticating.
 
 Your **AccessData** Model
 1. Needs a `userData` property
 2. Conform to `ABACAccessData`
+> AccessData is the data which is stored/cached in the session storage. It contains e.g. the access token and other properties like userData.
+> For more info see `AsyncBearerAuthenticator` authenticate() and writable sections:
+> https://docs.vapor.codes/security/authentication/#bearer
+> https://docs.vapor.codes/advanced/services/?h=storage#writable
 
 Your **AccessDataRepo**
 1. Conform your repo protocol or your actual repo which is responsible for fetching the users AccessData to `ABACAccessDataRepo` and implement its required method. 
 
 
-An example of an **APIResource**
-A simple struct holding your resources, could look like:
+An **APIResource** is not mandatory but helps a lot. It simply contains all the resources as well as helper vars to fetch all or all protected resources. A struct could look like:
 ```swift
 struct APIResource {
     
@@ -212,7 +216,7 @@ struct RestrictedABACAuthorizationPoliciesMigration: AsyncMigration {
 
 Open `configure.swift` 
 
-Import the package (`import ABACAuthorization`) set the integrated Fluent repository
+Import the package (`import ABACAuthorization`) and set the integrated Fluent repository
 ```swift
 app.abacAuthorizationRepoFactory.use { req in
     ABACAuthorizationFluentRepo(db: req.db)
@@ -231,13 +235,16 @@ app.migrations.add(ABACAuthorizationPolicyModelMigration())
 app.migrations.add(ABACConditionModelMigration())
 ```
 
-and add your AdminAuthorizationPolicy migration with the minimal set of rules
+and add your AdminAuthorizationPolicy migration with the minimal set of rules before `try await app.autoMigrate()`
 ```swift
-app.migrations.use(AdminAuthorizationPolicyRestricted(), on: .psql)
+    if (app.environment != .testing) {
+        app.migrations.add(RestrictedABACAuthorizationPoliciesMigration())
+    }
+    try await app.autoMigrate()
 ```
 
 
-To Load the persisted rules on startup go to `boot.swift`
+To Load the persisted rules on startup, create a `prepare.swift` file 
 ```swift
 // MARK: Authorization
 
@@ -252,6 +259,14 @@ if let sql = app.db as? SQLDatabase {
     }
 }
 ```
+and call it from within the `configure.swift` file
+```swift
+// MARK: Lifecycle Handler
+
+app.lifecycle.use(Prepare())
+```
+
+
 
 
 ### Horizontal scaling
