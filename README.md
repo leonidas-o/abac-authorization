@@ -276,7 +276,13 @@ See the demo projects README for further information how to make this package ho
 
 
 
-### Demo Project
+### ABAC-Authorization-toolkit
+The "Demo Project" project has been deprecated in favour of the new abac-authorization toolkit, which is a fully automatic approach to incorporate the abac authorization package into a vapor project. 
+
+https://github.com/leonidas-o/abac-authorization-toolkit
+
+
+### Demo Project (Deprecated)
 Here you can find an quick and dirty example project for testing purposes, it should show how ABACAuthorization can be used. Not all routes/ handlers are fully implemented, sometimes you have the api functionality but not the frontend part:
 
 https://github.com/leonidas-o/abac-authorization-web
