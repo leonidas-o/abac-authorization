@@ -277,7 +277,7 @@ See the demo projects README for further information how to make this package ho
 
 
 ### abac-authorization-toolkit
-The "Demo Project" project has been deprecated in favour of the new abac-authorization-toolkit, which is a fully automatic approach to incorporate abac authorization package into a vapor project. 
+The "abac-authorization-web" demo project has been deprecated in favour of the new abac-authorization-toolkit, which is a fully automatic approach to incorporate abac authorization package into a vapor project. 
 
 https://github.com/leonidas-o/abac-authorization-toolkit
 
