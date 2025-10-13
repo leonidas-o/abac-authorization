@@ -4,9 +4,11 @@ import Fluent
 public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
     
     let db: Database
+    let dbRo: Database?
     
-    public init(db: Database) {
+    public init(db: Database, dbRo: Database? = nil) {
         self.db = db
+        self.dbRo = dbRo
     }
     
     
@@ -30,17 +32,17 @@ public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
     
     
     public func getAllWithConditions() async throws -> [ABACAuthorizationPolicyModel] {
-        return try await ABACAuthorizationPolicyModel.query(on: db).with(\.$conditions).all()
+        return try await ABACAuthorizationPolicyModel.query(on: dbRo ?? db).with(\.$conditions).all()
     }
     
     
     public func get(_ policyId: ABACAuthorizationPolicyModel.IDValue) async throws -> ABACAuthorizationPolicyModel? {
-        return try await ABACAuthorizationPolicyModel.find(policyId, on: db)
+        return try await ABACAuthorizationPolicyModel.find(policyId, on: dbRo ?? db)
     }
     
     
     public func getWithConditions(_ policyId: ABACAuthorizationPolicyModel.IDValue) async throws -> ABACAuthorizationPolicyModel? {
-        return try await ABACAuthorizationPolicyModel.query(on: db).with(\.$conditions).filter(\.$id == policyId).first()
+        return try await ABACAuthorizationPolicyModel.query(on: dbRo ?? db).with(\.$conditions).filter(\.$id == policyId).first()
     }
     
     
@@ -93,12 +95,12 @@ public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
     
     
     public func getCondition(_ conditionId: ABACConditionModel.IDValue) async throws -> ABACConditionModel? {
-        return try await ABACConditionModel.find(conditionId, on: db)
+        return try await ABACConditionModel.find(conditionId, on: dbRo ?? db)
     }
     
     
     public func getConditionWithPolicy(_ conditionId: ABACConditionModel.IDValue) async throws -> ABACConditionModel? {
-        return try await ABACConditionModel.query(on: db).with(\.$authorizationPolicy).filter(\.$id == conditionId).first()
+        return try await ABACConditionModel.query(on: dbRo ?? db).with(\.$authorizationPolicy).filter(\.$id == conditionId).first()
     }
     
     
@@ -129,12 +131,12 @@ public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
     // MARK: - Relations
     
     public func getAllConditions(_ authPolicy: ABACAuthorizationPolicyModel) async throws -> [ABACConditionModel] {
-        return try await authPolicy.$conditions.query(on: db).all()
+        return try await authPolicy.$conditions.query(on: dbRo ?? db).all()
     }
     
     
     public func getConditionPolicy(_ condition: ABACConditionModel) async throws -> ABACAuthorizationPolicyModel {
-        return try await condition.$authorizationPolicy.get(on: db)
+        return try await condition.$authorizationPolicy.get(on: dbRo ?? db)
     }
     
 }
