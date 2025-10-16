@@ -1,5 +1,5 @@
 import Vapor
-
+import Foundation
 
 public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     
@@ -87,41 +87,25 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     
     private func getRequestedAndProtectedResource(fromPathComponents pathComponents: ArraySlice<PathComponent>) -> String {
         var protectedResource: String = ""
-        // start with subdir lookup
-        for index in 0..<pathComponents.count {
-            // must have at least two paths otherwise continue with single path lookup
-            guard pathComponents.count-index >= 2 else { break }
-            let joined = pathComponents[pathComponents.startIndex..<(pathComponents.endIndex-index)].string
-            if protectedResources.contains(joined) {
-                protectedResource = joined
-                break
-            }
-        }
-        // afterwards single path lookup starting from the back
-        if protectedResource.isEmpty {
-            for path in pathComponents.reversed() {
-                if protectedResources.contains(path.description) {
-                    protectedResource = path.description
-                    break
-                }
-            }
+        
+        let joined = pathComponents.string
+        if matchesPattern(joined, in: protectedResources) {
+            protectedResource = joined
         }
         return protectedResource
+    }
+    /// wildcard matching for string arrays
+    private func matchesPattern(_ target: String, in patterns: [String]) -> Bool {
+        let targetComps = target.abacPathComponents
         
-//        let resources = Set(pathComponents).intersection(Set(apiResource.all))
-//
-//        var resource: String = ""
-//        if resources.count == 1 {
-//            // default request or parent child relationship
-//            guard let first = resources.first else {
-//                throw Abort(.internalServerError)
-//            }
-//            resource = first
-//        } else if resources.count > 1 {
-//            // pivot table/ sibling relationship, Parent-child everything with more than one resource
-//            resource = resources.sorted().joined(separator: "_")
-//        }
-//        return resource
+        return patterns.contains { pattern in
+            let patternComps = pattern.abacPathComponents
+            guard patternComps.count == targetComps.count else { return false }
+            
+            return zip(targetComps, patternComps).allSatisfy { targetComp, patternComp in
+                patternComp == "*" ? targetComp.isURLSafe : targetComp == patternComp
+            }
+        }
     }
     
     
@@ -150,7 +134,9 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         var decision = Decision.notapplicable
         for pdpRequest in pdpRequests {
             
-            guard let policyCollection = authorizationPolicyService.authPolicyCollection[pdpRequest.role]?[pdpRequest.action+pdpRequest.onResource] else {
+            let targetPath = pdpRequest.action+pdpRequest.onResource
+            guard let collection = authorizationPolicyService.authPolicyCollection[pdpRequest.role],
+                  let policyCollection = valueForMatchingPattern(targetPath, in: collection) else {
                 decision = .notapplicable
                 continue
             }
@@ -170,6 +156,22 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
             }
         }
         return decision
+    }
+    /// wildcard search in authPolicyCollection dictionary
+    private func valueForMatchingPattern(_ target: String, in resourcesCollection: [String: [String: any AuthorizationValuable]]) -> [String: any AuthorizationValuable]? {
+        let targetComps = target.abacPathComponents
+        
+        for (pattern, value) in resourcesCollection {
+            let patternComps = pattern.abacPathComponents
+            guard patternComps.count == targetComps.count else { continue }
+            
+            if zip(targetComps, patternComps).allSatisfy({ targetComp, patternComp in
+                patternComp == "*" ? targetComp.isURLSafe : targetComp == patternComp
+            }) {
+                return value
+            }
+        }
+        return nil
     }
     
     private func evaluateCondition<T: ABACUserData>(_ conditionValuable: ConditionValuable?, on userData: T) throws -> Bool {
@@ -335,5 +337,16 @@ extension Array where Element == String {
                 return path
             }
         }
+    }
+}
+
+
+extension String {
+    var abacPathComponents: [String] {
+        components(separatedBy: "/").filter { !$0.isEmpty }
+    }
+    var isURLSafe: Bool {
+        let urlSafeCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~")
+        return unicodeScalars.allSatisfy { urlSafeCharacters.contains($0) }
     }
 }
