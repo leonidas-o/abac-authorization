@@ -88,9 +88,13 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     private func getRequestedAndProtectedResource(fromPathComponents pathComponents: ArraySlice<PathComponent>) -> String {
         var protectedResource: String = ""
         
-        let joined = pathComponents.string
-        if matchesPattern(joined, in: protectedResources) {
-            protectedResource = joined
+        for index in 0..<pathComponents.count {
+            guard pathComponents.count-index >= 1 else { break }
+            let joined = pathComponents[pathComponents.startIndex..<(pathComponents.endIndex-index)].string
+//            let joined = pathComponents.string
+            if matchesPattern(joined, in: protectedResources) {
+                protectedResource = joined
+            }
         }
         return protectedResource
     }
@@ -100,6 +104,19 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         
         return patterns.contains { pattern in
             let patternComps = pattern.abacPathComponents
+            
+            // Handle recursive wildcard "**" at the end
+            if let last = patternComps.last, last == "**" {
+                // Ensure all prefix components match (up to "**")
+                let prefixPatternComps = patternComps.dropLast()
+                guard prefixPatternComps.count <= targetComps.count else { return false }
+                
+                return zip(targetComps, prefixPatternComps).allSatisfy { targetComp, patternComp in
+                    patternComp == "*" ? targetComp.isURLSafe : targetComp == patternComp
+                }
+            }
+            
+            // Non-"**" patterns require exact component count match
             guard patternComps.count == targetComps.count else { return false }
             
             return zip(targetComps, patternComps).allSatisfy { targetComp, patternComp in
@@ -163,11 +180,23 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         
         for (pattern, value) in resourcesCollection {
             let patternComps = pattern.abacPathComponents
-            guard patternComps.count == targetComps.count else { continue }
             
-            if zip(targetComps, patternComps).allSatisfy({ targetComp, patternComp in
-                patternComp == "*" ? targetComp.isURLSafe : targetComp == patternComp
-            }) {
+            // Handle recursive wildcard "**" at the end
+            if let last = patternComps.last, last == "**" {
+                let prefixPatternComps = patternComps.dropLast()
+                guard prefixPatternComps.count <= targetComps.count else { continue }
+                
+                if zip(targetComps, prefixPatternComps).allSatisfy({ targetComp, patternComp in
+                    patternComp == "*" ? targetComp.isURLSafe : targetComp == patternComp
+                }) {
+                    return value
+                }
+            }
+            // Non-"**" patterns require exact component count match
+            else if patternComps.count == targetComps.count,
+                    zip(targetComps, patternComps).allSatisfy({ targetComp, patternComp in
+                        patternComp == "*" ? targetComp.isURLSafe : targetComp == patternComp
+                    }) {
                 return value
             }
         }
