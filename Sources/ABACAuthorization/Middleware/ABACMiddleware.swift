@@ -87,16 +87,12 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     
     private func getRequestedAndProtectedResource(fromPathComponents pathComponents: ArraySlice<PathComponent>) -> String {
         var protectedResource: String = ""
-        
-        for index in 0..<pathComponents.count {
-            guard pathComponents.count-index >= 1 else { break }
-            let joined = pathComponents[pathComponents.startIndex..<(pathComponents.endIndex-index)].string
-//            let joined = pathComponents.string
-            if matchesPattern(joined, in: protectedResources) {
-                protectedResource = joined
-            }
-        }
-        return protectedResource
+         
+         let joined = pathComponents.string
+         if matchesPattern(joined, in: protectedResources) {
+             protectedResource = joined
+         }
+         return protectedResource
     }
     /// wildcard matching for string arrays
     private func matchesPattern(_ target: String, in patterns: [String]) -> Bool {
