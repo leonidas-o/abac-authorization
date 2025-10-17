@@ -37,7 +37,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         // is performed. Right now, user can update a AuthorizationPolicy
         // with only a 'create' policy over a bulk create route
         let action: ABACAPIAction
-        switch request.method.string {
+        switch request.method.rawValue {
         case "GET":
             action = .read
         case "POST":
@@ -147,7 +147,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         var decision = Decision.notapplicable
         for pdpRequest in pdpRequests {
             
-            let targetPath = pdpRequest.action+pdpRequest.onResource
+            let targetPath = pdpRequest.action+"/"+pdpRequest.onResource
             guard let collection = authorizationPolicyService.authPolicyCollection[pdpRequest.role],
                   let policyCollection = valueForMatchingPattern(targetPath, in: collection) else {
                 decision = .notapplicable
