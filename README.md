@@ -67,7 +67,16 @@ Your **AccessDataRepo**
 1. Conform your repo protocol or your actual repo which is responsible for fetching the users AccessData to `ABACAccessDataRepo` and implement its required method. 
 
 
-An **APIResource** is not mandatory but helps a lot. It simply contains all the resources as well as helper vars to fetch all or all protected resources. A struct could look like:
+An **APIResource** is not mandatory but helps a lot. It simply contains all the resources as well as helper vars to fetch all or all protected resources.
+The `_allProtected` constant is evaluated and used as a source of truth for protected routes/ resources. With it, you decide what will be protected, nothing more, nothing less, allowing access to this resources happens later via auth policies. See the following statements to better understand the decision process:
+
+1. It marks a specified route/ resource as a protected resource.
+2. It does not specify anything about who can access this given resource.
+3. having `/users` only protects `/users`, not the subdirectories.
+4. having `/users/**` protects all subdirectories, but NOT the root resource `/users`.
+5. having `/users/*/foo` protects e.g. `/users/<userId>/foo` with a dynamic route parameter in between.
+
+A struct could look like:
 ```swift
 struct APIResource {
     
@@ -81,8 +90,10 @@ struct APIResource {
         APIResource.Resource.abacAuthorizationPolicies.rawValue,
         APIResource.Resource.abacConditions.rawValue,
         APIResource.Resource.todos.rawValue,
+        APIResource.Resource.todos.rawValue+"/**",
         APIResource.Resource.users.rawValue,
         APIResource.Resource.users.rawValue+"/"+APIResource.Resource.foo.rawValue,
+        APIResource.Resource.users.rawValue+"/*/"+APIResource.Resource.bar.rawValue,
         APIResource.Resource.myUser.rawValue,
         APIResource.Resource.roles.rawValue,
     ].sorted { $0 < $1 }
@@ -152,10 +163,10 @@ import ABACAuthorization
 
 struct RestrictedABACAuthorizationPoliciesMigration: AsyncMigration {
     
-    let readAuthPolicies = "\(ABACAPIAction.read)\(APIResource.Resource.abacAuthPolicies.rawValue)"
-    let createAuthPolicies = "\(ABACAPIAction.create)\(APIResource.Resource.abacAuthPolicies.rawValue)"
-    let readRoles = "\(ABACAPIAction.read)\(APIResource.Resource.roles.rawValue)"
-    let readAuths = "\(ABACAPIAction.read)\(APIResource.Resource.auth.rawValue)"
+    let readAuthPolicies = "\(ABACAPIAction.read)/\(APIResource.Resource.abacAuthPolicies.rawValue)"
+    let createAuthPolicies = "\(ABACAPIAction.create)/\(APIResource.Resource.abacAuthPolicies.rawValue)"
+    let readRoles = "\(ABACAPIAction.read)/\(APIResource.Resource.roles.rawValue)"
+    let readAuths = "\(ABACAPIAction.read)/\(APIResource.Resource.auth.rawValue)"
     
     
     func prepare(on database: Database) async throws {

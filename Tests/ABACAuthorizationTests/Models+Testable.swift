@@ -5,19 +5,19 @@ import Foundation
 extension ABACAuthorizationPolicyModel {
     static func createRules(for roleName: String, rulesPermitsAccess permits: Bool) -> [ABACAuthorizationPolicyModel] {
         
-        let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)\(ABACMiddlewareTests.APIResource.Resource.abacAuthorizationPolicies.rawValue)"
+        let readAuthPolicyActionOnResource = "\(ABACAPIAction.read)/\(ABACMiddlewareTests.APIResource.Resource.abacAuthorizationPolicies.rawValue)"
         let readAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionKey: readAuthPolicyActionOnResource,
             actionValue: permits)
         
-        let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)\(ABACMiddlewareTests.APIResource.Resource.abacAuthorizationPolicies.rawValue)"
+        let createAuthPolicyActionOnResource = "\(ABACAPIAction.create)/\(ABACMiddlewareTests.APIResource.Resource.abacAuthorizationPolicies.rawValue)"
         let writeAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionKey: createAuthPolicyActionOnResource,
             actionValue: permits)
         
-        let readRoleActionOnResource = "\(ABACAPIAction.read)\(ABACMiddlewareTests.APIResource.Resource.roles.rawValue)"
+        let readRoleActionOnResource = "\(ABACAPIAction.read)/\(ABACMiddlewareTests.APIResource.Resource.roles.rawValue)"
         let readRole = ABACAuthorizationPolicyModel(
             roleName: roleName,
             actionKey: readRoleActionOnResource,

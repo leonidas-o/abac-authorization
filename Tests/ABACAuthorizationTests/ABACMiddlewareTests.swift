@@ -98,18 +98,18 @@ final class ABACMiddlewareTests: XCTestCase {
     /// def: Entry defined, entry can be Resource, Token, Rule, Condition, ...
     /// undef: Entry is undefined, not existing
     /// isAllowed/ isDisallowed: Outcome of the test
-    func testGetProtectedResourceWithMissingTokenIsDisallowed() {
+    func testGetProtectedResourceWithMissingTokenIsDisallowed() async throws {
         /// If the token is undefined, it doesn't matter if there are any rules
         /// or not. Any request has to have a valid token.
         
         // Given
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing)
+        
         let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req async in
+            return HTTPStatus.ok
         }
         
         // When
@@ -122,33 +122,33 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.missingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try await app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res async in
                 XCTAssertEqual(res.status, .unauthorized)
             })
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
         authPolicyService.removeAllFromInMemoryCollection()
+        try await app.asyncShutdown()
     }
 
     
     
-    func testGetUnprotectedResourceWithExistingTokenWithDefNotMatchingPolicyWithUndefConditionIsAllowed() {
+    func testGetUnprotectedResourceWithExistingTokenWithDefNotMatchingPolicyWithUndefConditionIsAllowed() async throws {
         /// No rules exist for that resource
         
         // Given
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing)
         let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req async in
+            return HTTPStatus.ok
         }
         // Route in ABAC Resources undefined/ not proteced, but exists in vapor
         // and route uses ABAC Middleware
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "any-unprotected-resource") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "any-unprotected-resource") { req async in
+            return HTTPStatus.ok
         }
         
         // When
@@ -161,26 +161,26 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/any-unprotected-resource", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try await app.test(.GET, "\(apiResource.abacApiEntry)/any-unprotected-resource", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res async in
                 XCTAssertEqual(res.status, .ok)
             })
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
         authPolicyService.removeAllFromInMemoryCollection()
+        try await app.asyncShutdown()
     }
     
     
     
-    func testGetProtectedResourceWithDefTokenWithDefPolicyWithUndefConditionIsAllowed() {
+    func testGetProtectedResourceWithDefTokenWithDefPolicyWithUndefConditionIsAllowed() async throws {
         // Given
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing)
         let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req async in
+            return HTTPStatus.ok
         }
         
         // When
@@ -193,23 +193,23 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try await app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res async in
                 XCTAssertEqual(res.status, .ok)
             })
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
         authPolicyService.removeAllFromInMemoryCollection()
+        try await app.asyncShutdown()
     }
-    func testGetProtectedResourceWithDefTokenWithWithDefBlockingPolicyWithUndefConditionIsDisallowed() {
+    func testGetProtectedResourceWithDefTokenWithWithDefBlockingPolicyWithUndefConditionIsDisallowed() async throws {
         // Given
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing)
         let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req async in
+            return HTTPStatus.ok
         }
         
         // When
@@ -222,26 +222,26 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try await app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res async in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
         authPolicyService.removeAllFromInMemoryCollection()
+        try await app.asyncShutdown()
     }
     
     
     
-    func testGetProtecedResourceWithDefTokenWithDefPolicyWithDefConditionIsAllowed() {
+    func testGetProtecedResourceWithDefTokenWithDefPolicyWithDefConditionIsAllowed() async throws {
         // Given
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing)
         let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req async in
+            return HTTPStatus.ok
         }
         
         // When
@@ -259,25 +259,25 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try await app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res async in
                 XCTAssertEqual(res.status, .ok)
             })
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
         authPolicyService.removeAllFromInMemoryCollection()
+        try await app.asyncShutdown()
     }
-    func testGetProtecedResourceWithDefTokenWithDefBlockingPolicyWithDefConditionIsDisallowed() {
+    func testGetProtecedResourceWithDefTokenWithDefBlockingPolicyWithDefConditionIsDisallowed() async throws {
         // As the policy is already blocking the request, the conditions have no effect
         
         // Given
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing)
         let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req async in
+            return HTTPStatus.ok
         }
         
         // When
@@ -295,18 +295,19 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try await app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res async in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
         authPolicyService.removeAllFromInMemoryCollection()
+        try await app.asyncShutdown()
     }
     
     
     
-    func testGetProtectedResourceWithDefTokenWithDefPolicyWithDefNotMatchingConditionIsDisallowed() {
+    func testGetProtectedResourceWithDefTokenWithDefPolicyWithDefNotMatchingConditionIsDisallowed() async throws {
         // Even though we've defined the default rules, witch permit access option and a condition, the request has to be disallowed.
         // The here defined condition is part of the rule, only if the whole rule (policy+condition) matches the request is granted.
         // It would allow the request if 'role.0.name' would be 'admin'
@@ -314,13 +315,12 @@ final class ABACMiddlewareTests: XCTestCase {
         // the request will be denied as there is no existing rule which permits it.
         
         // Given
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let app = try await Application.make(.testing)
         let cache = ABACAccessDataRepoSpy()
         let apiResource = APIResource()
         let sut = ABACMiddleware<AccessData>(accessDataRepo: cache, protectedResources: apiResource.abacProtectedResources)
-        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req in
-            return req.eventLoop.future(HTTPStatus.ok)
+        app.routes.grouped(sut).get("\(apiResource.abacApiEntry)", "\(APIResource.Resource.abacAuthorizationPolicies.rawValue)") { req async in
+            return HTTPStatus.ok
         }
         
         // When
@@ -338,12 +338,13 @@ final class ABACMiddlewareTests: XCTestCase {
         // Then
         let bearer = Constant.existingToken
         do {
-            try app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res in
+            try await app.test(.GET, "\(apiResource.abacApiEntry)/\(APIResource.Resource.abacAuthorizationPolicies.rawValue)", headers: ["Authorization": "Bearer \(bearer)"], afterResponse: { res async in
                 XCTAssertEqual(res.status, .forbidden)
             })
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
         authPolicyService.removeAllFromInMemoryCollection()
+        try await app.asyncShutdown()
     }
 }
