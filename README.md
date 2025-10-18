@@ -165,6 +165,8 @@ struct RestrictedABACAuthorizationPoliciesMigration: AsyncMigration {
     
     let readAuthPolicies = "\(ABACAPIAction.read)/\(APIResource.Resource.abacAuthPolicies.rawValue)"
     let createAuthPolicies = "\(ABACAPIAction.create)/\(APIResource.Resource.abacAuthPolicies.rawValue)"
+    let readAuthPoliciesSubdirs = "\(ABACAPIAction.read)/\(APIResource.Resource.abacAuthPolicies.rawValue)/**"
+    let createAuthPoliciesSubdirs = "\(ABACAPIAction.create)/\(APIResource.Resource.abacAuthPolicies.rawValue)/**"    
     let readRoles = "\(ABACAPIAction.read)/\(APIResource.Resource.roles.rawValue)"
     let readAuths = "\(ABACAPIAction.read)/\(APIResource.Resource.auth.rawValue)"
     
@@ -178,11 +180,18 @@ struct RestrictedABACAuthorizationPoliciesMigration: AsyncMigration {
             roleName: role.name,
             actionKey: readAuthPolicies,
             actionValue: true)
-        
         let writeAuthPolicy = ABACAuthorizationPolicyModel(
             roleName: role.name,
             actionKey: createAuthPolicies,
             actionValue: true)
+        let readAuthPolicySubdirs = ABACAuthorizationPolicyModel(
+            roleName: role.name,
+            actionKey: readAuthPoliciesSubdirs,
+            actionValue: true)
+        let writeAuthPolicySubdirs = ABACAuthorizationPolicyModel(
+            roleName: role.name,
+            actionKey: createAuthPoliciesSubdirs,
+            actionValue: true)    
         
         let readRole = ABACAuthorizationPolicyModel(
             roleName: role.name,
@@ -194,11 +203,13 @@ struct RestrictedABACAuthorizationPoliciesMigration: AsyncMigration {
             actionKey: readAuths,
             actionValue: true)
             
-        async let readAuthPolicyResponse: () = readAuthPolicy.save(on: database)
-        async let writeAuthPolicyResponse: () = writeAuthPolicy.save(on: database)
-        async let readRoleResponse: () = readRole.save(on: database)
-        async let readAuthResponse: () = readAuth.save(on: database)
-        _ = try await (readAuthPolicyResponse, writeAuthPolicyResponse, readRoleResponse, readAuthResponse)
+        try await readAuthPolicy.save(on: database)
+        try await writeAuthPolicy.save(on: database)
+        try await readAuthPolicySubdirs.save(on: database)
+        try await writeAuthPolicySubdirs.save(on: database)
+        
+        try await readRole.save(on: database)
+        try await readAuth.save(on: database)
     }
     
     func revert(on database: Database) async throws {
@@ -206,23 +217,22 @@ struct RestrictedABACAuthorizationPoliciesMigration: AsyncMigration {
             throw Abort(.internalServerError)
         }
         
-        async let readAuthPolicyResponse: () = ABACAuthorizationPolicyModel.query(on: database)
+        try await ABACAuthorizationPolicyModel.query(on: database)
             .filter(\.$roleName == role.name)
             .filter(\.$actionKey == readAuthPolicies)
             .delete()
-        async let writeAuthPolicyResponse: () = ABACAuthorizationPolicyModel.query(on: database)
+        try await ABACAuthorizationPolicyModel.query(on: database)
             .filter(\.$roleName == role.name)
             .filter(\.$actionKey == createAuthPolicies)
             .delete()
-        async let readRoleResponse: () = ABACAuthorizationPolicyModel.query(on: database)
+        try await ABACAuthorizationPolicyModel.query(on: database)
             .filter(\.$roleName == role.name)
             .filter(\.$actionKey == readRoles)
             .delete()
-        async let readAuthResponse: () = ABACAuthorizationPolicyModel.query(on: database)
+        try await ABACAuthorizationPolicyModel.query(on: database)
             .filter(\.$roleName == role.name)
             .filter(\.$actionKey == readAuths)
             .delete()
-        _ = try await (readAuthPolicyResponse, writeAuthPolicyResponse, readRoleResponse, readAuthResponse)
     }
 }
 ```
