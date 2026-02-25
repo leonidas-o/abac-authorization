@@ -113,7 +113,6 @@ public struct ABACAuthorizationPolicyModelMiddleware: AsyncModelMiddleware {
         try await ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: model, conditions: [])
     }
     
-    
     public func delete(model: ABACAuthorizationPolicyModel, force: Bool, on db: any Database, next: any AnyAsyncModelResponder) async throws {
         // before operation
         try await next.delete(model, force: force, on: db)
