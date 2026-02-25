@@ -1,6 +1,26 @@
 # ABACAuthorization
 
+- [ABACAuthorization](#abacauthorization)
+  - [Intro](#intro)
+  - [Getting Started](#getting-started)
+    - [Setup dependencies](#setup-dependencies)
+    - [Models](#models)
+      - [Overview](#overview)
+      - [Details](#details)
+    - [DB Seeding](#db-seeding)
+      - [Admin user](#admin-user)
+      - [Minimal policy rule set](#minimal-policy-rule-set)
+    - [Final Steps](#final-steps)
+    - [Policy UI](#policy-ui)
+    - [Horizontal scaling](#horizontal-scaling)
+    - [abac-authorization-toolkit](#abac-authorization-toolkit)
+    - [Demo Project (Deprecated)](#demo-project-deprecated)
+  - [License](#license)
+
+
+## Intro
 This is an attribute based access control authorization system/ role based access control system for the Swift Vapor Framework + Fluent. The usage of attributes is not mandatory, you can also specify policies based on roles only. All policies are kept in-memory, instantiated from the DB on startup, so the evaluation/ policy lookup process is as fast as a swift dictionary lookup. No DB requests necessary. See section "Horizontal scaling" for more info.
+
 
 ## Getting Started
 
