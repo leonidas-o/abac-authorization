@@ -295,6 +295,16 @@ app.lifecycle.use(Prepare())
 ```
 
 
+### Policy UI
+This is a minimal package, it does not contain any UI or shares information how you can manage your policies. A simple UI can be found in abac-authorization-toolkit. If you look into the DB, you will see how the policies are stored and this is all you need.
+
+```
+"123abc12-1234-abcd-efgh-a535f6fe1237"	 "admin"  "create/abac-auth-policies"  true
+"456abc12-1234-abcd-efgh-f893b88f83d5"	 "admin"  "read/abac-auth-policies"     true
+...
+```
+
+The DB is the single source of truth, the in-memory values are always re-created out of these values. You can come up with whatever fits best for you to create, update or delete these DB entries.
 
 
 ### Horizontal scaling
