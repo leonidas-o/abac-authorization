@@ -4,11 +4,11 @@ import Foundation
 public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     
     private let authorizationPolicyService: ABACAuthorizationPolicyService
-    private let accessDataRepo: ABACAccessDataRepo
+    private let accessDataRepo: any ABACAccessDataRepo
     private let protectedResources: [String]
     
     
-    public init(_ type: AD.Type = AD.self, accessDataRepo: ABACAccessDataRepo, protectedResources: [String]) {
+    public init(_ type: AD.Type = AD.self, accessDataRepo: any ABACAccessDataRepo, protectedResources: [String]) {
         self.authorizationPolicyService = ABACAuthorizationPolicyService.shared
         self.accessDataRepo = accessDataRepo
         self.protectedResources = protectedResources
@@ -17,7 +17,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     
     // MARK: - Policy Enforcement Point (PEP)
     
-    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         
         let pathComponents = request.url.path.pathComponents
         let range = getPathComponentsRange(pathComponents)
@@ -60,7 +60,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
             pdpRequests.append(pdpRequest)
         }
         
-        let decision = try checkPDPRequests(pdpRequests, on: accessData.userData)
+        let decision = try await checkPDPRequests(pdpRequests, on: accessData.userData)
         switch decision {
         case .permit:
             return try await next.respond(to: request)
@@ -139,7 +139,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     /// 'deny' - access denied,
     /// 'indeterminate' - error at the PDP,
     /// 'notapplicable' - some attribute missing in the request or no policy match.
-    private func checkPDPRequests<T: ABACUserData>(_ pdpRequests: [PDPRequest], on userData: T) throws -> Decision {
+    private func checkPDPRequests<T: ABACUserData>(_ pdpRequests: [PDPRequest], on userData: T) async throws -> Decision {
         
         // TODO: log decisions e.g. like the audit log of selinux
         // right now, only the last denied/not applicable decision
@@ -148,7 +148,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         for pdpRequest in pdpRequests {
             
             let targetPath = pdpRequest.action+"/"+pdpRequest.onResource
-            guard let collection = authorizationPolicyService.authPolicyCollection[pdpRequest.role],
+            guard let collection = await authorizationPolicyService.authPolicyCollection[pdpRequest.role],
                   let policyCollection = valueForMatchingPattern(targetPath, in: collection) else {
                 decision = .notapplicable
                 continue
@@ -199,7 +199,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         return nil
     }
     
-    private func evaluateCondition<T: ABACUserData>(_ conditionValuable: ConditionValuable?, on userData: T) throws -> Bool {
+    private func evaluateCondition<T: ABACUserData>(_ conditionValuable: (any ConditionValuable)?, on userData: T) throws -> Bool {
         guard let condition = conditionValuable else { return true }
         
         // TODO: Implement ConditionValues on Arrays
@@ -217,15 +217,15 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
         }
     }
     
-    private func evaluateConditionOperation<T: Comparable>(_ t: T.Type, condition: ConditionValuable, userDataMirror: Mirror) throws -> Bool {
+    private func evaluateConditionOperation<T: Comparable & Sendable>(_ t: T.Type, condition: any ConditionValuable, userDataMirror: Mirror) throws -> Bool {
         switch (condition.lhsType, condition.rhsType) {
         case (.reference, .reference):
             guard let condition = condition as? ABACAuthorizationPolicyService.Condition<String, String, T> else {
                 throw Abort(.internalServerError)
             }
             
-            let lhsComponents: [MirrorPath] = condition.lhs.components(separatedBy: ".").toMirrorPath()
-            let rhsComponents: [MirrorPath] = condition.rhs.components(separatedBy: ".").toMirrorPath()
+            let lhsComponents: [any MirrorPath] = condition.lhs.components(separatedBy: ".").toMirrorPath()
+            let rhsComponents: [any MirrorPath] = condition.rhs.components(separatedBy: ".").toMirrorPath()
             let lhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: lhsComponents)
             let rhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: rhsComponents)
             return condition.operation(lhs, rhs)
@@ -233,14 +233,14 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
             guard let condition = condition as? ABACAuthorizationPolicyService.Condition<String, T, T> else {
                 throw Abort(.internalServerError)
             }
-            let lhsComponents: [MirrorPath] = condition.lhs.components(separatedBy: ".").toMirrorPath()
+            let lhsComponents: [any MirrorPath] = condition.lhs.components(separatedBy: ".").toMirrorPath()
             let lhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: lhsComponents)
             return condition.operation(lhs, condition.rhs)
         case (.value, .reference):
             guard let condition = condition as? ABACAuthorizationPolicyService.Condition<T, String, T> else {
                 throw Abort(.internalServerError)
             }
-            let rhsComponents: [MirrorPath] = condition.rhs.components(separatedBy: ".").toMirrorPath()
+            let rhsComponents: [any MirrorPath] = condition.rhs.components(separatedBy: ".").toMirrorPath()
             let rhs = try getValueFromMirror(T.self, mirror: userDataMirror, atPath: rhsComponents)
             return condition.operation(condition.lhs, rhs)
         case (.value, .value):
@@ -252,7 +252,7 @@ public final class ABACMiddleware<AD: ABACAccessData>: AsyncMiddleware {
     }
     
     
-    private func getValueFromMirror<T>(_ t: T.Type, mirror: Mirror, atPath path: [MirrorPath]) throws -> T {
+    private func getValueFromMirror<T>(_ t: T.Type, mirror: Mirror, atPath path: [any MirrorPath]) throws -> T {
         switch path.count {
         case 1:
             guard let value = mirror.descendant(path[0]) as? T else { throw Abort(.internalServerError) }
@@ -354,7 +354,7 @@ extension BidirectionalCollection where Iterator.Element: Equatable {
 
 
 extension Array where Element == String {
-    func toMirrorPath() -> [MirrorPath] {
+    func toMirrorPath() -> [any MirrorPath] {
         self.map { path in
             if let numPath = Int(path) {
                 return numPath

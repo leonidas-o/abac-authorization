@@ -1,13 +1,13 @@
 import Vapor
 
-public struct ABACAuthorizationPersistenceRepoFactory {
-    var make: ((Request) -> ABACAuthorizationPersistenceRepo)?
-    public mutating func use(_ make: @escaping ((Request) -> ABACAuthorizationPersistenceRepo)) {
+public struct ABACAuthorizationPersistenceRepoFactory: Sendable {
+    var make: (@Sendable (Request) -> any ABACAuthorizationPersistenceRepo)?
+    public mutating func use(_ make: @escaping @Sendable (Request) -> any ABACAuthorizationPersistenceRepo) {
         self.make = make
     }
     
-    var makeForApp: ((Application) -> ABACAuthorizationPersistenceRepo)?
-    public mutating func useForApp(_ make: @escaping ((Application) -> ABACAuthorizationPersistenceRepo)) {
+    var makeForApp: (@Sendable (Application) -> any ABACAuthorizationPersistenceRepo)?
+    public mutating func useForApp(_ make: @escaping @Sendable (Application) -> any ABACAuthorizationPersistenceRepo) {
         self.makeForApp = make
     }
 }
@@ -32,13 +32,13 @@ extension Application {
 
 
 extension Application {
-    public var abacAuthorizationRepo: ABACAuthorizationPersistenceRepo {
+    public var abacAuthorizationRepo: any ABACAuthorizationPersistenceRepo {
         self.abacAuthorizationRepoFactory.makeForApp!(self)
     }
 }
 
 extension Request {
-    public var abacAuthorizationRepo: ABACAuthorizationPersistenceRepo {
+    public var abacAuthorizationRepo: any ABACAuthorizationPersistenceRepo {
         self.application.abacAuthorizationRepoFactory.make!(self)
     }
 }

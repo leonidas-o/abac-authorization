@@ -1,6 +1,6 @@
 import NIO
 
-public protocol ABACAuthorizationPersistenceRepo {
+public protocol ABACAuthorizationPersistenceRepo: Sendable {
     // ABACAuthorizationPolicies
     func save(_ policy: ABACAuthorizationPolicyModel) async throws -> Void
     func saveBulk(_ policies: [ABACAuthorizationPolicyModel]) async throws

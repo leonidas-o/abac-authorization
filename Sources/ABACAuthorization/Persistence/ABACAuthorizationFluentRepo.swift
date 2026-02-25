@@ -3,10 +3,10 @@ import Fluent
 
 public struct ABACAuthorizationFluentRepo: ABACAuthorizationPersistenceRepo {
     
-    let db: Database
-    let dbRo: Database?
+    let db: any Database
+    let dbRo: (any Database)?
     
-    public init(db: Database, dbRo: Database? = nil) {
+    public init(db: any Database, dbRo: (any Database)? = nil) {
         self.db = db
         self.dbRo = dbRo
     }

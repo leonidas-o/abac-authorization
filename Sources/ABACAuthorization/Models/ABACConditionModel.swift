@@ -2,24 +2,24 @@ import Vapor
 import Fluent
 
 /// Fluent Model
-public final class ABACConditionModel: Model {
+public final class ABACConditionModel: Model, @unchecked Sendable {
     
     public enum Constant {
         public static let defaultConditionKey = "key1"
     }
     
-    public enum ConditionValueType: String, Codable, CaseIterable {
+    public enum ConditionValueType: String, Codable, CaseIterable, Sendable {
         case string
         case int
         case double
     }
     
-    public enum ConditionType: String, Codable, CaseIterable {
+    public enum ConditionType: String, Codable, CaseIterable, Sendable {
         case value
         case reference
     }
     
-    public enum ConditionOperationType: String, Codable, CaseIterable {
+    public enum ConditionOperationType: String, Codable, CaseIterable, Sendable {
         case equal = "=="
         case notEqual = "!="
         case greaterThan = ">"
@@ -115,7 +115,7 @@ public struct ABACConditionModelMigration: AsyncMigration {
     
     public init() {}
     
-    public func prepare(on database: Database) async throws {
+    public func prepare(on database: any Database) async throws {
         try await database.schema("abac_condition")
             .id()
             .field("key", .string, .required)
@@ -130,7 +130,7 @@ public struct ABACConditionModelMigration: AsyncMigration {
             .create()
     }
     
-    public func revert(on database: Database) async throws {
+    public func revert(on database: any Database) async throws {
         try await database.schema("abac_condition")
             .delete()
     }
@@ -144,29 +144,29 @@ public struct ABACConditionModelMiddleware: AsyncModelMiddleware {
     
     public init() {}
     
-    public func update(model: ABACConditionModel, on db: Database, next: AnyAsyncModelResponder) async throws {
+    public func update(model: ABACConditionModel, on db: any Database, next: any AnyAsyncModelResponder) async throws {
         // before operation
         try await next.update(model, on: db) //.map {
         // after operation
         let policy = try await model.$authorizationPolicy.get(on: db)
         let conditions = try await policy.$conditions.query(on: db).all()
-        try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: policy, conditions: conditions)
+        try await ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: policy, conditions: conditions)
     }
     
-    public func create(model: ABACConditionModel, on db: Database, next: AnyAsyncModelResponder) async throws {
+    public func create(model: ABACConditionModel, on db: any Database, next: any AnyAsyncModelResponder) async throws {
         // before operation
         try await next.create(model, on: db)
         // after operation
         let policy = try await model.$authorizationPolicy.get(on: db)
         let conditions = try await policy.$conditions.query(on: db).all()
-        try ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: policy, conditions: conditions)
+        try await ABACAuthorizationPolicyService.shared.addToInMemoryCollection(policy: policy, conditions: conditions)
     }
     
-    public func delete(model: ABACConditionModel, force: Bool, on db: Database, next: AnyAsyncModelResponder) async throws {
+    public func delete(model: ABACConditionModel, force: Bool, on db: any Database, next: any AnyAsyncModelResponder) async throws {
         // before operation
         try await next.delete(model, force: force, on: db)
         // after operation
         let policy = try await model.$authorizationPolicy.get(on: db)
-        ABACAuthorizationPolicyService.shared.removeFromInMemoryCollection(condition: model, in: policy)
+        await ABACAuthorizationPolicyService.shared.removeFromInMemoryCollection(condition: model, in: policy)
     }
 }

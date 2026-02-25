@@ -1,12 +1,12 @@
 import Vapor
 import Foundation
 
-protocol AuthorizationValuable {
+protocol AuthorizationValuable: Sendable {
     var actionValue: Bool { get set }
-    var condition: ConditionValuable? { get set}
+    var condition: (any ConditionValuable)? { get set}
 }
 
-protocol ConditionValuable {
+protocol ConditionValuable: Sendable {
     var type: ABACConditionModel.ConditionValueType { get set }
     var lhsType: ABACConditionModel.ConditionType { get set }
     var rhsType: ABACConditionModel.ConditionType { get set }
@@ -14,27 +14,13 @@ protocol ConditionValuable {
 
 
 
-public final class ABACAuthorizationPolicyService {
+public actor ABACAuthorizationPolicyService {
     
     static let shared = ABACAuthorizationPolicyService()
     
     private init() {}
     
-    
-    private let authPolicyQueue = DispatchQueue(
-        label: "abacAuthorization.authPolicyQueue",
-        qos: DispatchQoS.default,
-        attributes: DispatchQueue.Attributes.concurrent)
-    /// structure overview: [role:[actionOnResource:[condition: VALUES ]]]
-    private var authPolicyCollectionValue: [String:[String:[String:AuthorizationValuable]]] = [:]
-    var authPolicyCollection: [String:[String:[String:AuthorizationValuable]]] {
-        get {
-            return authPolicyQueue.sync { authPolicyCollectionValue }
-        }
-        set(newValue) {
-            authPolicyQueue.async(flags: DispatchWorkItemFlags.barrier) { self.authPolicyCollectionValue = newValue }
-        }
-    }
+    var authPolicyCollection: [String:[String:[String:any AuthorizationValuable]]] = [:]
 }
 
 
@@ -60,16 +46,16 @@ extension Request {
 extension ABACAuthorizationPolicyService {
     private struct Authorization: AuthorizationValuable {
         var actionValue: Bool
-        var condition: ConditionValuable?
+        var condition: (any ConditionValuable)?
     }
     
-    struct Condition<LhsT: Comparable, RhsT: Comparable, OpsT: Comparable>: ConditionValuable {
+    struct Condition<LhsT: Comparable & Sendable, RhsT: Comparable & Sendable, OpsT: Comparable & Sendable>: ConditionValuable {
         var type: ABACConditionModel.ConditionValueType
         var lhsType: ABACConditionModel.ConditionType
         var lhs: LhsT
         var rhsType: ABACConditionModel.ConditionType
         var rhs: RhsT
-        var operation: ((OpsT, OpsT) -> Bool)
+        var operation: @Sendable (OpsT, OpsT) -> Bool
     }
 }
 
@@ -230,7 +216,7 @@ extension ABACAuthorizationPolicyService {
         }
     }
     
-    private func determineConditionOperation<T: Comparable>(forConditionType type: T.Type, fromConditionOperation operation: ABACConditionModel.ConditionOperationType) -> ((T, T) -> Bool) {
+    private func determineConditionOperation<T: Comparable>(forConditionType type: T.Type, fromConditionOperation operation: ABACConditionModel.ConditionOperationType) -> @Sendable (T, T) -> Bool {
                 
         switch operation {
         case .equal:

@@ -116,7 +116,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
+            try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
         }
         
         // Then
@@ -128,7 +128,7 @@ final class ABACMiddlewareTests: XCTestCase {
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
-        authPolicyService.removeAllFromInMemoryCollection()
+        await authPolicyService.removeAllFromInMemoryCollection()
         try await app.asyncShutdown()
     }
 
@@ -155,7 +155,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
+            try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
         }
         
         // Then
@@ -167,7 +167,7 @@ final class ABACMiddlewareTests: XCTestCase {
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
-        authPolicyService.removeAllFromInMemoryCollection()
+        await authPolicyService.removeAllFromInMemoryCollection()
         try await app.asyncShutdown()
     }
     
@@ -187,7 +187,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: true)
         for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
+            try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
         }
         
         // Then
@@ -199,7 +199,7 @@ final class ABACMiddlewareTests: XCTestCase {
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
-        authPolicyService.removeAllFromInMemoryCollection()
+        await authPolicyService.removeAllFromInMemoryCollection()
         try await app.asyncShutdown()
     }
     func testGetProtectedResourceWithDefTokenWithWithDefBlockingPolicyWithUndefConditionIsDisallowed() async throws {
@@ -216,7 +216,7 @@ final class ABACMiddlewareTests: XCTestCase {
         let authPolicyService = ABACAuthorizationPolicyService.shared
         let rules = ABACAuthorizationPolicyModel.createRules(for: Constant.adminRoleName, rulesPermitsAccess: false)
         for (_, rule) in rules.enumerated() {
-            try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
+            try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
         }
         
         // Then
@@ -228,7 +228,7 @@ final class ABACMiddlewareTests: XCTestCase {
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
-        authPolicyService.removeAllFromInMemoryCollection()
+        await authPolicyService.removeAllFromInMemoryCollection()
         try await app.asyncShutdown()
     }
     
@@ -250,9 +250,9 @@ final class ABACMiddlewareTests: XCTestCase {
         let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
+                try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
+                try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         
@@ -265,7 +265,7 @@ final class ABACMiddlewareTests: XCTestCase {
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
-        authPolicyService.removeAllFromInMemoryCollection()
+        await authPolicyService.removeAllFromInMemoryCollection()
         try await app.asyncShutdown()
     }
     func testGetProtecedResourceWithDefTokenWithDefBlockingPolicyWithDefConditionIsDisallowed() async throws {
@@ -286,9 +286,9 @@ final class ABACMiddlewareTests: XCTestCase {
         let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "admin")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
+                try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
+                try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         
@@ -301,7 +301,7 @@ final class ABACMiddlewareTests: XCTestCase {
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
-        authPolicyService.removeAllFromInMemoryCollection()
+        await authPolicyService.removeAllFromInMemoryCollection()
         try await app.asyncShutdown()
     }
     
@@ -329,9 +329,9 @@ final class ABACMiddlewareTests: XCTestCase {
         let conditions = ABACConditionModel.createConditionValues(dummyRef: "roles.0.name", dummyVal: "author")
         for (index, rule) in rules.enumerated() {
             if index == 0 {
-                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
+                try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: conditions)
             } else {
-                try! authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
+                try! await authPolicyService.addToInMemoryCollection(policy: rule, conditions: [])
             }
         }
         
@@ -344,7 +344,7 @@ final class ABACMiddlewareTests: XCTestCase {
         } catch {
             XCTAssertTrue(false, "\(#function): \(error)")
         }
-        authPolicyService.removeAllFromInMemoryCollection()
+        await authPolicyService.removeAllFromInMemoryCollection()
         try await app.asyncShutdown()
     }
 }
