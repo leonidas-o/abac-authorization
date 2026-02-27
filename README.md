@@ -259,16 +259,46 @@ struct RestrictedABACAuthorizationPoliciesMigration: AsyncMigration {
 
 ### Final Steps
 
-Open `configure.swift` 
+You can make the repository accessible by using one of the following methods.
+A: Simply instatiating and injecting the Repository where needed.
 
-Import the package (`import ABACAuthorization`) and set the integrated Fluent repository
+B: Repository-Registry
+Add a file with repository id and extensions. 
+```swift
+import ABACAuthorization
+
+// convenience id
+extension RepositoryId {
+    static let abacAuthorizationRepo = RepositoryId("abacAuthorizationRepo")
+}
+
+
+
+// Vapor Request
+extension RepositoryFactory {
+    var abacAuthorizationRepo: ABACAuthorizationPersistenceRepo {
+        make(.abacAuthorizationRepo)
+    }
+}
+
+// Vapor Application
+extension RepositoryFactoryForApp {
+    var abacAuthorizationRepo: ABACAuthorizationPersistenceRepo {
+        make(.abacAuthorizationRepo)
+    }
+}
+```
+
+C: Repository-Factory
+Open `configure.swift` and Import the package (`import ABACAuthorization`) and set the integrated Fluent repository
 ```swift
 app.abacAuthorizationRepoFactory.use { req in
     ABACAuthorizationFluentRepo(db: req.db)
 }
 ```
 
-Hook into the models lifecycle events
+
+Inside `configure.swift`, hook into the models lifecycle events
 ```swift
 app.databases.middleware.use(ABACAuthorizationPolicyModelMiddleware())
 app.databases.middleware.use(ABACConditionModelMiddleware())
